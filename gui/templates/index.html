@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="mb-0 fw-bold">Dashboard</h4>
+    <span class="text-muted small">Bank Transaction Processor</span>
+  </div>
+  <form method="post" action="{{ url_for('run_now') }}">
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-play-fill me-1"></i>Run Now
+    </button>
+  </form>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="card p-3">
+      <div class="text-muted small">Categories</div>
+      <div class="fs-2 fw-bold">{{ category_count }}</div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card p-3">
+      <div class="text-muted small">Pending Rule Reviews</div>
+      <div class="fs-2 fw-bold {% if pending_count > 0 %}text-danger{% endif %}">
+        {{ pending_count }}
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card p-3">
+      <div class="text-muted small">Poll Interval</div>
+      <div class="fs-2 fw-bold">{{ config.get('poll_interval_minutes', 15) }} min</div>
+    </div>
+  </div>
+</div>
+
+{% if pending_count > 0 %}
+<div class="alert alert-warning d-flex align-items-center">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+  <span>
+    <strong>{{ pending_count }} transaction(s)</strong> were manually categorized in Notion.
+    <a href="{{ url_for('review') }}" class="alert-link">Review and save rules →</a>
+  </span>
+</div>
+{% endif %}
+
+<div class="card p-3">
+  <h6 class="fw-semibold mb-2">How it works</h6>
+  <ol class="mb-0 text-muted small">
+    <li>Drop bank export CSV files into your Google Drive folder</li>
+    <li>The watcher picks them up every {{ config.get('poll_interval_minutes', 15) }} minutes (or click <strong>Run Now</strong>)</li>
+    <li>Transactions are categorized, deduplicated, and pushed to Notion</li>
+    <li>Uncategorized ones get an email alert — categorize them in Notion</li>
+    <li>Come back to <strong>Review Rules</strong> to save new patterns for next time</li>
+  </ol>
+</div>
+
+{% endblock %}

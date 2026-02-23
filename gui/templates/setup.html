@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h4 class="fw-bold mb-4">Setup</h4>
+
+<form method="post" enctype="multipart/form-data">
+  <input type="hidden" name="action" value="save">
+
+  <!-- Google Drive -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h6 class="fw-semibold mb-3"><i class="bi bi-google me-2 text-primary"></i>Google Drive</h6>
+
+      <div class="mb-3">
+        <label class="form-label">Service Account JSON
+          {% if sa_exists %}
+            <span class="badge bg-success ms-2"><i class="bi bi-check-lg"></i> Uploaded</span>
+          {% else %}
+            <span class="badge bg-danger ms-2">Not uploaded</span>
+          {% endif %}
+        </label>
+        <input type="file" name="service_account" accept=".json" class="form-control">
+        <div class="form-text">
+          Create a service account at
+          <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank">Google Cloud Console</a>,
+          enable the Drive API, download the JSON key, and upload it here.
+          Then share your Drive folder with the service account email.
+        </div>
+      </div>
+
+      <div class="mb-0">
+        <label class="form-label">Drive Folder ID</label>
+        <input type="text" name="drive_folder_id" class="form-control font-monospace"
+               value="{{ config.get('google_drive', {}).get('folder_id', '') }}"
+               placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs">
+        <div class="form-text">
+          The ID is the last part of your Drive folder URL:
+          <code>drive.google.com/drive/folders/<strong>THIS-PART</strong></code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notion -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h6 class="fw-semibold mb-3"><i class="bi bi-journal-text me-2"></i>Notion</h6>
+
+      <div class="mb-0">
+        <label class="form-label">Integration Token</label>
+        <input type="password" name="notion_token" class="form-control font-monospace"
+               value="{{ config.get('notion', {}).get('token', '') }}"
+               placeholder="secret_...">
+        <div class="form-text">
+          Create an integration at
+          <a href="https://www.notion.so/my-integrations" target="_blank">notion.so/my-integrations</a>,
+          then share the Finance Database with it.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h6 class="fw-semibold mb-3"><i class="bi bi-envelope me-2 text-danger"></i>Email Notifications</h6>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Gmail Address</label>
+          <input type="email" name="email_username" class="form-control"
+                 value="{{ config.get('email', {}).get('username', '') }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">App Password</label>
+          <input type="password" name="email_app_password" class="form-control"
+                 value="{{ config.get('email', {}).get('app_password', '') }}"
+                 placeholder="xxxx xxxx xxxx xxxx">
+          <div class="form-text">
+            Generate at
+            <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a>
+            (requires 2FA enabled).
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Send Notifications To</label>
+          <input type="email" name="email_recipient" class="form-control"
+                 value="{{ config.get('email', {}).get('recipient', '') }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- General -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h6 class="fw-semibold mb-3"><i class="bi bi-sliders me-2"></i>General</h6>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Poll Interval (minutes)</label>
+          <input type="number" name="poll_interval" class="form-control" min="1" max="1440"
+                 value="{{ config.get('poll_interval_minutes', 15) }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">GUI Password</label>
+          <input type="password" name="gui_password" class="form-control"
+                 value="{{ config.get('gui', {}).get('password', '') }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary px-4">
+    <i class="bi bi-save me-1"></i>Save Configuration
+  </button>
+</form>
+
+{% endblock %}

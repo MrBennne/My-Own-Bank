@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0">Categories</h4>
+    <span class="text-muted small">Keywords are matched case-insensitively against merchant names</span>
+  </div>
+</div>
+
+<!-- Add new category -->
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="post" class="d-flex gap-2">
+      <input type="hidden" name="action" value="add">
+      <input type="text" name="new_cat_name" class="form-control" placeholder="New category name (e.g. Transport)" required>
+      <button type="submit" class="btn btn-outline-primary text-nowrap">
+        <i class="bi bi-plus-lg me-1"></i>Add Category
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit existing categories -->
+<form method="post" id="save-form">
+  <input type="hidden" name="action" value="save">
+
+  {% for cat_name, keywords in categories.items() %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <input type="text" name="cat_name" class="form-control fw-semibold w-auto"
+               value="{{ cat_name }}" style="max-width:200px">
+        <button type="button" class="btn btn-sm btn-outline-danger"
+                onclick="deleteCategory('{{ cat_name }}')">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+      <textarea name="cat_keywords" class="form-control font-monospace"
+                rows="{{ [3, keywords|length + 1]|max }}"
+                placeholder="One keyword per line">{{ keywords | join('\n') }}</textarea>
+      <div class="form-text">One keyword per line. Substring match — "REMA 1000" matches "REMA 1000 KOLDING".</div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <button type="submit" class="btn btn-primary px-4">
+    <i class="bi bi-save me-1"></i>Save All
+  </button>
+</form>
+
+<!-- Hidden delete form -->
+<form method="post" id="delete-form" style="display:none">
+  <input type="hidden" name="action" value="delete">
+  <input type="hidden" name="delete_cat" id="delete-cat-name">
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteCategory(name) {
+  if (confirm(`Delete category "${name}"?`)) {
+    document.getElementById('delete-cat-name').value = name;
+    document.getElementById('delete-form').submit();
+  }
+}
+</script>
+{% endblock %}

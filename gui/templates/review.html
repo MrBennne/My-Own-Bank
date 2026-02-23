@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h4 class="fw-bold mb-1">Review Rules</h4>
+<p class="text-muted small mb-4">
+  These transactions were saved as <strong>Uncategorized</strong> and have since been manually
+  categorized in Notion. Check the ones you want to add as permanent keyword rules so they're
+  auto-categorized next time. Leave unchecked for one-off transactions.
+</p>
+
+{% if not pending %}
+  <div class="card p-4 text-center text-muted">
+    <i class="bi bi-check-circle fs-2 mb-2"></i>
+    <div>No pending rule reviews. You're all caught up.</div>
+  </div>
+{% else %}
+
+<form method="post">
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th style="width:48px">
+              <input type="checkbox" id="select-all" class="form-check-input">
+            </th>
+            <th>Merchant (from Notion)</th>
+            <th>Category</th>
+            <th>Keyword to save</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in pending %}
+          <tr>
+            <td>
+              <input type="checkbox" name="approve" value="{{ item.page_id }}"
+                     class="form-check-input row-check">
+            </td>
+            <td class="text-muted small font-monospace">{{ item.name }}</td>
+            <td>
+              <span class="badge bg-primary">{{ item.category }}</span>
+            </td>
+            <td>
+              <input type="text" name="keyword_{{ item.page_id }}"
+                     class="form-control form-control-sm font-monospace"
+                     value="{{ item.keyword }}"
+                     placeholder="Keyword to match">
+              <div class="form-text">Edit to make it more generic if needed</div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-3 d-flex gap-2">
+    <button type="submit" class="btn btn-primary px-4">
+      <i class="bi bi-save me-1"></i>Save Checked Rules
+    </button>
+    <span class="text-muted small align-self-center">
+      Unchecked rows will stay here for next time.
+    </span>
+  </div>
+</form>
+
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('select-all').addEventListener('change', function() {
+  document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
+});
+</script>
+{% endblock %}
