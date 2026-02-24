@@ -2,7 +2,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-NOTION_DB_URL = 'https://www.notion.so/30f3379ef16a8171b87bcc0aea908466'
+NOTION_DB_URL = 'https://www.notion.so/3103379ef16a8155aedcd69e17d727d8?v=3103379ef16a805bbce3000c6dde09a1'
 
 
 class Notifier:

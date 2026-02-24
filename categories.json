@@ -13,7 +13,9 @@
     "MCDERRITSO",
     "BYENS BR",
     "KOLDING SUSHI",
-    "Restaurant"
+    "Restaurant",
+    "kontaktlÃ¸s REMA1000 Nr. Bjert, Kolding",
+    "DAGLI BRUGSEN BALLEN"
   ],
   "Computer": [
     "GITHUB",
@@ -29,7 +31,9 @@
     "GOOGLE*GSUITE",
     "GOOGLE*YOUTUBEPREMIUM",
     "YouTubePremium",
-    "YouTube Premium"
+    "YouTube Premium",
+    "Google Payment IE LTD, London,",
+    "Google GSUITE_nolimitd, Dublin,"
   ],
   "Husleje": [
     "Husleje",
@@ -45,20 +49,52 @@
   "Fy": [
     "ATM/Udbetaling",
     "Kontanten",
-    "PAYPAL"
+    "PAYPAL",
+    "Retro Bar Kolding",
+    "Jernbanecafeen",
+    "DANI'S KIOSK"
   ],
   "Div": [
     "Prime Video",
     "HBO",
     "help.hbomax.com",
-    "MobilePay Flowers"
+    "MobilePay Flowers",
+    "BONE'S RESTAURA",
+    "TAXA",
+    "App Dantaxi, Bagsvaerd",
+    "NORMAL KOLDING",
+    "BILTEMA FREDERI",
+    "JYSK KOLDING D0",
+    "MobilePay kÃ¸b MobilePay Elgiganten",
+    "AHA LIVESTAGE A",
+    "ULVE APOTEKET -",
+    "MerlotPrivate Selectio",
+    "MCDVEJLESYD",
+    "VONSILDVEJ APOTEK",
+    "JYSK KOLDING SY"
   ],
   "Udlån": [
     "MobilePay: MobilePay Madeline",
-    "MobilePay: MobilePay Mikkel"
+    "MobilePay: MobilePay Mikkel",
+    "MobilePay: MobilePay Annie Petersen",
+    "MobilePay Andreas Bang Thomsen",
+    "MobilePay Jesper Eskildsen",
+    "MobilePay: MobilePay Rikke Nissen",
+    "MobilePay Rasmus Knak Morte...",
+    "MobilePay Cecilie RÃ¸nn Stra...",
+    "InddÃ¦kning overtrÃ¦k",
+    "MobilePay: MobilePay Rebecca Bang Stense",
+    "MobilePay Madeline Jessen Holm",
+    "MobilePay Simone Beck Nannberg",
+    "MobilePay Frank Gregers Gre...",
+    "MobilePay Mikkel Beck Nannberg",
+    "MobilePay Michael Graff",
+    "MobilePay Rebecca Bang Stensen",
+    "MobilePay Antoni Norlander ..."
   ],
   "Til budget": [
-    "Til Budgetkonto"
+    "Til Budgetkonto",
+    "Inddækning overtræk"
   ],
   "Briller": [
     "PROFIL OPTIK"
@@ -66,5 +102,37 @@
   "Booster": [
     "MobilePay: MobilePay Tanja",
     "MobilePay: MobilePay Rasmus"
+  ],
+  "Regning": [
+    "Rente af indestÃ¥ende",
+    "Rente af overtrÃ¦k",
+    "Gebyr",
+    "danmark",
+    "EWII BredbÃ¥nd A/S",
+    "NETS"
+  ],
+  "Gave": [
+    "Zalando Payments GmbH, Berlin",
+    "CHANGE - KOLDIN",
+    "F",
+    "VIBHOLM GULD &"
+  ],
+  "Fra Opsparing": [
+    "OverfÃ¸rsel",
+    "Til Ung Opsparing"
+  ],
+  "???": [
+    "Rejsekort:K004413161"
+  ],
+  "bil": [
+    "DÃ¦k"
+  ],
+  "Til Opsparing": [
+    "MobilePay: MobilePay Rebecca Bang Stense"
+  ],
+  "Ferie": [
+    "SAMS",
+    "Zettle_*Ballen Grill",
+    "Samsoe Rederi, Saelvig - Sam"
   ]
 }

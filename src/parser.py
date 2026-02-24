@@ -61,6 +61,7 @@ def parse_csv(content):
                 'amount': amount,
                 'currency': currency,
                 'account': 'Lønkonto',
+                'type': 'Income' if amount >= 0 else 'Expense',
             })
         except (ValueError, IndexError):
             continue

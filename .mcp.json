@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "pocketbase": {
+      "command": "npx",
+      "args": ["-y", "@fadlee/pocketbase-mcp"],
+      "env": {
+        "POCKETBASE_URL": "http://locserv.tail18bcbb.ts.net:8091"
+      }
+    }
+  }
+}

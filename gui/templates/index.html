@@ -1,60 +1,237 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-3">
   <div>
     <h4 class="mb-0 fw-bold">Dashboard</h4>
     <span class="text-muted small">Bank Transaction Processor</span>
   </div>
   <form method="post" action="{{ url_for('run_now') }}">
-    <button type="submit" class="btn btn-success">
+    <button type="submit" class="btn btn-success btn-sm">
       <i class="bi bi-play-fill me-1"></i>Run Now
     </button>
   </form>
 </div>
 
+{# Period selector #}
+{% set periods = [
+  ('all',        'All Time'),
+  ('this_year',  'This Year'),
+  ('last_year',  'Last Year'),
+  ('last_6m',    'Last 6M'),
+  ('last_3m',    'Last 3M'),
+  ('last_month', 'Last Month'),
+  ('this_month', 'This Month'),
+] %}
+<div class="mb-4">
+  <div class="btn-group btn-group-sm flex-wrap" role="group">
+    {% for key, label in periods %}
+      <a href="{{ url_for('index', period=key) }}"
+         class="btn btn-outline-secondary {% if period == key %}active{% endif %}">
+        {{ label }}
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
+{% if pending_count > 0 %}
+<div class="alert alert-warning alert-dismissible fade show d-flex align-items-center py-2 mb-3">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+  <span class="small">
+    <strong>{{ pending_count }}</strong> transaction(s) manually categorized —
+    <a href="{{ url_for('review') }}" class="alert-link">Review rules →</a>
+  </span>
+  <button type="button" class="btn-close btn-sm ms-auto" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+{% if stats %}
+{# KPI cards #}
 <div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card p-3">
+      <div class="text-muted small mb-1"><i class="bi bi-arrow-down-circle-fill text-success me-1"></i>Income</div>
+      <div class="fs-5 fw-bold text-success">{{ '{:,.0f}'.format(stats.total_income) }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card p-3">
+      <div class="text-muted small mb-1"><i class="bi bi-arrow-up-circle-fill text-danger me-1"></i>Expenses</div>
+      <div class="fs-5 fw-bold text-danger">{{ '{:,.0f}'.format(stats.total_expense) }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card p-3">
+      <div class="text-muted small mb-1"><i class="bi bi-piggy-bank-fill text-primary me-1"></i>Net Savings</div>
+      <div class="fs-5 fw-bold {% if stats.net >= 0 %}text-primary{% else %}text-danger{% endif %}">
+        {{ '{:,.0f}'.format(stats.net) }}
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card p-3">
+      <div class="text-muted small mb-1"><i class="bi bi-percent text-warning me-1"></i>Savings Rate</div>
+      <div class="fs-5 fw-bold {% if stats.savings_rate >= 20 %}text-success{% elif stats.savings_rate >= 0 %}text-warning{% else %}text-danger{% endif %}">
+        {{ stats.savings_rate }}%
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Charts #}
+<div class="row g-3 mb-4">
+  <div class="col-md-5">
+    <div class="card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="fw-semibold mb-0">Expenses by Category</h6>
+        <small class="text-muted">top 10 · sorted by amount</small>
+      </div>
+      {% if stats.expenses_by_cat %}
+        <canvas id="catChart"></canvas>
+      {% else %}
+        <p class="text-muted small text-center py-4">No expense data for this period.</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="fw-semibold mb-0">Monthly Income vs Expenses</h6>
+        <small class="text-muted">line = net savings</small>
+      </div>
+      {% if stats.monthly_labels %}
+        <canvas id="monthChart"></canvas>
+      {% else %}
+        <p class="text-muted small text-center py-4">No data for this period.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div class="alert alert-info small">Could not load stats from PocketBase.</div>
+{% endif %}
+
+{# Info cards #}
+<div class="row g-3">
   <div class="col-sm-4">
     <div class="card p-3">
       <div class="text-muted small">Categories</div>
-      <div class="fs-2 fw-bold">{{ category_count }}</div>
+      <div class="fs-3 fw-bold">{{ category_count }}</div>
     </div>
   </div>
   <div class="col-sm-4">
     <div class="card p-3">
-      <div class="text-muted small">Pending Rule Reviews</div>
-      <div class="fs-2 fw-bold {% if pending_count > 0 %}text-danger{% endif %}">
-        {{ pending_count }}
-      </div>
+      <div class="text-muted small">Avg Monthly Expense</div>
+      <div class="fs-3 fw-bold">{{ '{:,.0f}'.format(stats.avg_monthly_expense) if stats else '—' }}</div>
     </div>
   </div>
   <div class="col-sm-4">
     <div class="card p-3">
       <div class="text-muted small">Poll Interval</div>
-      <div class="fs-2 fw-bold">{{ config.get('poll_interval_minutes', 15) }} min</div>
+      <div class="fs-3 fw-bold">{{ config.get('poll_interval_minutes', 15) }} min</div>
     </div>
   </div>
 </div>
 
-{% if pending_count > 0 %}
-<div class="alert alert-warning d-flex align-items-center">
-  <i class="bi bi-exclamation-triangle-fill me-2"></i>
-  <span>
-    <strong>{{ pending_count }} transaction(s)</strong> were manually categorized in Notion.
-    <a href="{{ url_for('review') }}" class="alert-link">Review and save rules →</a>
-  </span>
-</div>
+{% endblock %}
+
+{% block scripts %}
+{% if stats and (stats.expenses_by_cat or stats.monthly_labels) %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+const PALETTE = [
+  '#0d6efd','#20c997','#ffc107','#dc3545','#6f42c1',
+  '#fd7e14','#0dcaf0','#6c757d','#198754','#d63384'
+];
+
+function fmtNum(v) {
+  return new Intl.NumberFormat('da-DK', {maximumFractionDigits: 0}).format(v);
+}
+
+{% if stats.expenses_by_cat %}
+// Donut — expenses by category (pre-sorted by amount desc)
+const catLabels = {{ stats.expenses_by_cat.keys() | list | tojson }};
+const catValues = {{ stats.expenses_by_cat.values() | list | tojson }};
+
+new Chart(document.getElementById('catChart'), {
+  type: 'doughnut',
+  data: {
+    labels: catLabels,
+    datasets: [{
+      data: catValues,
+      backgroundColor: PALETTE,
+      borderWidth: 2,
+      borderColor: '#fff',
+    }]
+  },
+  options: {
+    cutout: '58%',
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 11, font: { size: 11 }, padding: 8 } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.label}: ${fmtNum(ctx.parsed)} DKK`
+        }
+      }
+    }
+  }
+});
 {% endif %}
 
-<div class="card p-3">
-  <h6 class="fw-semibold mb-2">How it works</h6>
-  <ol class="mb-0 text-muted small">
-    <li>Drop bank export CSV files into your Google Drive folder</li>
-    <li>The watcher picks them up every {{ config.get('poll_interval_minutes', 15) }} minutes (or click <strong>Run Now</strong>)</li>
-    <li>Transactions are categorized, deduplicated, and pushed to Notion</li>
-    <li>Uncategorized ones get an email alert — categorize them in Notion</li>
-    <li>Come back to <strong>Review Rules</strong> to save new patterns for next time</li>
-  </ol>
-</div>
-
+{% if stats.monthly_labels %}
+// Mixed bar + line — monthly income/expenses + net savings line
+new Chart(document.getElementById('monthChart'), {
+  data: {
+    labels: {{ stats.monthly_labels | tojson }},
+    datasets: [
+      {
+        type: 'bar',
+        label: 'Income',
+        data: {{ stats.monthly_income | tojson }},
+        backgroundColor: 'rgba(32,201,151,0.7)',
+        order: 2,
+      },
+      {
+        type: 'bar',
+        label: 'Expenses',
+        data: {{ stats.monthly_expense | tojson }},
+        backgroundColor: 'rgba(220,53,69,0.7)',
+        order: 2,
+      },
+      {
+        type: 'line',
+        label: 'Net Savings',
+        data: {{ stats.net_savings | tojson }},
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13,110,253,0.08)',
+        borderWidth: 2,
+        pointRadius: 4,
+        tension: 0.3,
+        fill: true,
+        order: 1,
+        yAxisID: 'y',
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { labels: { boxWidth: 11, font: { size: 11 }, padding: 8 } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${fmtNum(ctx.parsed.y)} DKK`
+        }
+      }
+    },
+    scales: {
+      x: { ticks: { font: { size: 10 } } },
+      y: { ticks: { font: { size: 10 }, callback: v => fmtNum(v) } }
+    }
+  }
+});
+{% endif %}
+</script>
+{% endif %}
 {% endblock %}

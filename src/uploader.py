@@ -5,6 +5,16 @@ class NotionUploader:
     def __init__(self, config):
         self.client = Client(auth=config['notion']['token'])
         self.db_id = config['notion']['database_id']
+        self._ensure_type_property()
+
+    def _ensure_type_property(self):
+        """Add 'Type' select property to the database if it doesn't exist."""
+        db = self.client.databases.retrieve(database_id=self.db_id)
+        if 'Type' not in db['properties']:
+            self.client.databases.update(
+                database_id=self.db_id,
+                properties={'Type': {'select': {}}},
+            )
 
     def upload(self, transactions):
         """Upload transactions to Notion. Returns list of created page IDs."""
@@ -24,6 +34,7 @@ class NotionUploader:
                 'Account': {'select': {'name': tx.get('account', 'Lønkonto')}},
                 'Currency': {'select': {'name': tx.get('currency', 'DKK')}},
                 'Category': {'select': {'name': tx.get('category', 'Uncategorized')}},
+                'Type': {'select': {'name': tx.get('type', 'Expense')}},
             },
         )
         return resp['id']

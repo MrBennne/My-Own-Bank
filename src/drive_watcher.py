@@ -1,6 +1,6 @@
 import io
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 from google.oauth2 import service_account
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -24,7 +24,12 @@ class DriveWatcher:
             f"name='{self.processed_name}' and "
             f"mimeType='application/vnd.google-apps.folder' and trashed=false"
         )
-        results = self.service.files().list(q=query, fields='files(id)').execute()
+        results = self.service.files().list(
+            q=query,
+            fields='files(id)',
+            includeItemsFromAllDrives=True,
+            supportsAllDrives=True,
+        ).execute()
         files = results.get('files', [])
 
         if files:
@@ -35,44 +40,87 @@ class DriveWatcher:
                 'mimeType': 'application/vnd.google-apps.folder',
                 'parents': [self.folder_id],
             }
-            folder = self.service.files().create(body=metadata, fields='id').execute()
+            folder = self.service.files().create(body=metadata, fields='id', supportsAllDrives=True).execute()
             self._processed_folder_id = folder['id']
 
         return self._processed_folder_id
 
+    SHEETS_MIME = 'application/vnd.google-apps.spreadsheet'
+
     def get_new_files(self):
-        """Return list of (filename, file_id, content_string) for all CSVs in the folder."""
+        """Return list of (filename, file_id, content_string) for all CSVs/Sheets in the folder."""
         query = (
-            f"'{self.folder_id}' in parents and "
-            f"(name contains '.csv' or name contains '.CSV') and "
-            f"trashed=false"
+            f"'{self.folder_id}' in parents and trashed=false and ("
+            f"name contains '.csv' or name contains '.CSV' or "
+            f"mimeType='{self.SHEETS_MIME}'"
+            f")"
         )
-        results = self.service.files().list(q=query, fields='files(id, name)').execute()
+        results = self.service.files().list(
+            q=query,
+            fields='files(id, name, mimeType)',
+            includeItemsFromAllDrives=True,
+            supportsAllDrives=True,
+        ).execute()
         files = results.get('files', [])
 
         output = []
         for f in files:
-            fid, fname = f['id'], f['name']
-            request = self.service.files().get_media(fileId=fid)
+            fid, fname, mime = f['id'], f['name'], f['mimeType']
             buf = io.BytesIO()
+            if mime == self.SHEETS_MIME:
+                # Export Google Sheets as CSV
+                request = self.service.files().export_media(fileId=fid, mimeType='text/csv')
+                fname = fname if fname.lower().endswith('.csv') else fname + '.csv'
+            else:
+                request = self.service.files().get_media(fileId=fid)
             downloader = MediaIoBaseDownload(buf, request)
             done = False
             while not done:
                 _, done = downloader.next_chunk()
-            # utf-8-sig handles optional BOM
             content = buf.getvalue().decode('utf-8-sig')
             output.append((fname, fid, content))
 
         return output
 
+    def upload_log(self, log_path):
+        """Overwrite pipeline.log in the Drive folder.
+
+        The file must already exist in the folder (created manually by the Drive owner)
+        because service accounts cannot create new files (no storage quota).
+        """
+        query = (
+            f"'{self.folder_id}' in parents and name='pipeline.log' and trashed=false"
+        )
+        results = self.service.files().list(
+            q=query,
+            fields='files(id)',
+            includeItemsFromAllDrives=True,
+            supportsAllDrives=True,
+        ).execute()
+        existing = results.get('files', [])
+
+        if not existing:
+            raise FileNotFoundError(
+                "pipeline.log not found in Drive folder. "
+                "Please create an empty 'pipeline.log' text file there manually."
+            )
+
+        media = MediaFileUpload(log_path, mimetype='text/plain', resumable=False)
+        self.service.files().update(
+            fileId=existing[0]['id'],
+            media_body=media,
+            supportsAllDrives=True,
+        ).execute()
+
     def mark_processed(self, file_id):
         """Move a file into the processed/ subfolder."""
         processed_id = self._get_or_create_processed_folder()
-        file_meta = self.service.files().get(fileId=file_id, fields='parents').execute()
+        file_meta = self.service.files().get(fileId=file_id, fields='parents', supportsAllDrives=True).execute()
         prev_parents = ','.join(file_meta.get('parents', []))
         self.service.files().update(
             fileId=file_id,
             addParents=processed_id,
             removeParents=prev_parents,
             fields='id, parents',
+            supportsAllDrives=True,
         ).execute()

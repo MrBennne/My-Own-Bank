@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h4 class="fw-bold mb-1">Transactions</h4>
+<p class="text-muted small mb-3">{{ total }} total &mdash; edit category inline.</p>
+
+{# Filters #}
+<form method="get" class="row g-2 mb-3 align-items-end">
+  <input type="hidden" name="sort_by" value="{{ sort_by }}">
+  <input type="hidden" name="sort_order" value="{{ sort_order }}">
+  <div class="col-12 col-md-4">
+    <input type="text" name="search" value="{{ search }}"
+           class="form-control form-control-sm" placeholder="Search merchant...">
+  </div>
+  <div class="col-6 col-md-3">
+    <select name="category" class="form-select form-select-sm">
+      <option value="">All categories</option>
+      {% for cat in categories %}
+        <option value="{{ cat }}" {% if cat == cat_filter %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-6 col-md-2">
+    <select name="type" class="form-select form-select-sm">
+      <option value="">All types</option>
+      <option value="Income"  {% if type_filter == 'Income'  %}selected{% endif %}>Income</option>
+      <option value="Expense" {% if type_filter == 'Expense' %}selected{% endif %}>Expense</option>
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+    <a href="{{ url_for('transactions') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+  </div>
+</form>
+
+{# Sort helper macro #}
+{% macro sort_link(col, label) %}
+  {% set next_order = 'asc' if (sort_by == col and sort_order == 'desc') else 'desc' %}
+  <a href="{{ url_for('transactions', sort_by=col, sort_order=next_order,
+                      search=search, category=cat_filter, type=type_filter, page=1) }}"
+     class="text-decoration-none text-reset">
+    {{ label }}
+    {% if sort_by == col %}
+      <i class="bi bi-arrow-{{ 'down' if sort_order == 'desc' else 'up' }} ms-1"></i>
+    {% else %}
+      <i class="bi bi-arrow-down-up ms-1 text-muted opacity-50"></i>
+    {% endif %}
+  </a>
+{% endmacro %}
+
+<div class="card mb-3">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle table-sm">
+      <thead class="table-light">
+        <tr>
+          <th style="width:36px"></th>
+          <th>{{ sort_link('date', 'Date') }}</th>
+          <th>{{ sort_link('name', 'Merchant') }}</th>
+          <th class="text-end">{{ sort_link('amount', 'Amount') }}</th>
+          <th>{{ sort_link('category', 'Category') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rec in records %}
+        <tr>
+          <td>
+            {% if rec.type == 'Income' %}
+              <span class="badge bg-success">+</span>
+            {% else %}
+              <span class="badge bg-danger">&minus;</span>
+            {% endif %}
+          </td>
+          <td class="text-muted small">{{ rec.date }}</td>
+          <td class="small font-monospace">{{ rec.name }}</td>
+          <td class="text-end small font-monospace
+            {% if rec.type == 'Income' %}text-success{% else %}text-danger{% endif %}">
+            {{ '%.2f'|format(rec.amount) }} {{ rec.currency }}
+          </td>
+          <td>
+            <form method="post" action="{{ url_for('update_transaction', record_id=rec.id) }}"
+                  class="d-flex gap-1 align-items-center">
+              <input type="hidden" name="page" value="{{ current_page }}">
+              <input type="hidden" name="search" value="{{ search }}">
+              <input type="hidden" name="category_filter" value="{{ cat_filter }}">
+              <input type="hidden" name="sort_by" value="{{ sort_by }}">
+              <input type="hidden" name="sort_order" value="{{ sort_order }}">
+              <select name="category" class="form-select form-select-sm"
+                      style="min-width:110px"
+                      onchange="this.form.submit()">
+                {% for cat in categories %}
+                  <option value="{{ cat }}"
+                    {% if cat == rec.category %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+                {% if rec.category not in categories %}
+                  <option value="{{ rec.category }}" selected>{{ rec.category }}</option>
+                {% endif %}
+              </select>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No transactions found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# Pagination #}
+{% if total_pages > 1 %}
+<nav>
+  <ul class="pagination pagination-sm">
+    {% if current_page > 1 %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('transactions', page=current_page-1,
+           search=search, category=cat_filter, type=type_filter,
+           sort_by=sort_by, sort_order=sort_order) }}">&laquo;</a>
+      </li>
+    {% endif %}
+    {% for p in range([1, current_page-2]|max, [total_pages+1, current_page+3]|min) %}
+      <li class="page-item {% if p == current_page %}active{% endif %}">
+        <a class="page-link"
+           href="{{ url_for('transactions', page=p, search=search, category=cat_filter,
+                            type=type_filter, sort_by=sort_by, sort_order=sort_order) }}">
+          {{ p }}
+        </a>
+      </li>
+    {% endfor %}
+    {% if current_page < total_pages %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('transactions', page=current_page+1,
+           search=search, category=cat_filter, type=type_filter,
+           sort_by=sort_by, sort_order=sort_order) }}">&raquo;</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% endblock %}

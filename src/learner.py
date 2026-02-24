@@ -4,6 +4,7 @@ from notion_client import Client
 
 UPLOADED_LOG = 'data/uploaded_uncategorized.json'
 PENDING_RULES = 'data/pending_rules.json'
+APPROVED_RULES = 'data/approved_rules.json'
 
 
 class Learner:
@@ -40,7 +41,11 @@ class Learner:
             return
 
         pending = self._load_json(PENDING_RULES)
-        pending_ids = {e['page_id'] for e in pending}
+        approved = self._load_json(APPROVED_RULES)
+
+        # Build sets of already-seen (name, category) pairs to avoid duplicates
+        seen = {(e['name'], e['category']) for e in pending}
+        seen |= {(e['name'], e['category']) for e in approved}
 
         new_pending = []
         still_uncategorized = []
@@ -57,16 +62,23 @@ class Learner:
                 continue
 
             if category and category != 'Uncategorized':
-                if page_id not in pending_ids:
-                    # Suggest first 40 chars of name as the keyword to add
+                # Determine income vs expense from stored amount
+                amount = props.get('Amount', {}).get('number') or 0
+                tx_type = 'income' if amount >= 0 else 'expense'
+
+                key = (entry['name'], category, tx_type)
+                if key not in seen:
+                    seen.add(key)
                     suggested_keyword = entry['name'][:40].strip()
                     new_pending.append({
                         'page_id': page_id,
                         'name': entry['name'],
                         'category': category,
+                        'transaction_type': tx_type,
                         'keyword': suggested_keyword,
                         'approved': False,
                     })
+                # even if duplicate, remove from log (already handled)
             else:
                 still_uncategorized.append(entry)
 

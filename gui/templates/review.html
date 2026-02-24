@@ -4,19 +4,19 @@
 <h4 class="fw-bold mb-1">Review Rules</h4>
 <p class="text-muted small mb-4">
   These transactions were saved as <strong>Uncategorized</strong> and have since been manually
-  categorized in Notion. Check the ones you want to add as permanent keyword rules so they're
-  auto-categorized next time. Leave unchecked for one-off transactions.
+  categorized in Notion. Check the ones you want to add as permanent keyword rules.
+  Leave unchecked for one-off transactions. Use <strong>Dismiss</strong> to remove without saving a rule.
 </p>
 
 {% if not pending %}
-  <div class="card p-4 text-center text-muted">
+  <div class="card p-4 text-center text-muted mb-4">
     <i class="bi bi-check-circle fs-2 mb-2"></i>
     <div>No pending rule reviews. You're all caught up.</div>
   </div>
 {% else %}
 
-<form method="post">
-  <div class="card">
+<form method="post" id="review-form">
+  <div class="card mb-3">
     <div class="table-responsive">
       <table class="table table-hover mb-0 align-middle">
         <thead class="table-light">
@@ -24,9 +24,11 @@
             <th style="width:48px">
               <input type="checkbox" id="select-all" class="form-check-input">
             </th>
-            <th>Merchant (from Notion)</th>
+            <th style="width:36px"></th>
+            <th>Merchant</th>
             <th>Category</th>
-            <th>Keyword to save</th>
+            <th>Keyword</th>
+            <th style="width:90px">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -36,16 +38,48 @@
               <input type="checkbox" name="approve" value="{{ item.page_id }}"
                      class="form-check-input row-check">
             </td>
+            <td>
+              {% if item.get('transaction_type') == 'income' %}
+                <span class="badge bg-success">+</span>
+              {% else %}
+                <span class="badge bg-danger">&minus;</span>
+              {% endif %}
+            </td>
             <td class="text-muted small font-monospace">{{ item.name }}</td>
             <td>
-              <span class="badge bg-primary">{{ item.category }}</span>
+              <select name="category_{{ item.page_id }}"
+                      class="form-select form-select-sm"
+                      style="min-width:110px">
+                {% for cat in categories %}
+                  <option value="{{ cat }}"
+                    {% if cat == item.category %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+                {% if item.category not in categories %}
+                  <option value="{{ item.category }}" selected>{{ item.category }}</option>
+                {% endif %}
+              </select>
             </td>
             <td>
-              <input type="text" name="keyword_{{ item.page_id }}"
-                     class="form-control form-control-sm font-monospace"
-                     value="{{ item.keyword }}"
-                     placeholder="Keyword to match">
-              <div class="form-text">Edit to make it more generic if needed</div>
+              <div class="d-flex align-items-center gap-1">
+                <input type="text" name="keyword_{{ item.page_id }}"
+                       class="form-control form-control-sm font-monospace keyword-input"
+                       value="{{ item.keyword }}"
+                       readonly
+                       tabindex="-1"
+                       style="background:#f8f9fa; cursor:default; pointer-events:none; border-color:#dee2e6;">
+                <button type="button" class="btn btn-sm btn-outline-secondary p-1 edit-btn"
+                        data-target="keyword_{{ item.page_id }}"
+                        title="Edit keyword"
+                        style="flex-shrink:0">
+                  <i class="bi bi-pencil" style="font-size:.75rem"></i>
+                </button>
+              </div>
+            </td>
+            <td>
+              <button type="submit" name="dismiss" value="{{ item.page_id }}"
+                      class="btn btn-sm btn-outline-secondary">
+                Dismiss
+              </button>
             </td>
           </tr>
           {% endfor %}
@@ -54,16 +88,56 @@
     </div>
   </div>
 
-  <div class="mt-3 d-flex gap-2">
+  <div class="mt-3 d-flex gap-2 align-items-center">
     <button type="submit" class="btn btn-primary px-4">
       <i class="bi bi-save me-1"></i>Save Checked Rules
     </button>
-    <span class="text-muted small align-self-center">
-      Unchecked rows will stay here for next time.
-    </span>
+    <span class="text-muted small">Unchecked rows stay here for next time.</span>
   </div>
 </form>
 
+{% endif %}
+
+{% if approved %}
+<hr class="my-4">
+<div>
+  <button class="btn btn-sm btn-outline-secondary mb-3" type="button"
+          data-bs-toggle="collapse" data-bs-target="#approved-section">
+    <i class="bi bi-archive me-1"></i>Approved Rules ({{ approved|length }})
+  </button>
+  <div class="collapse" id="approved-section">
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table table-sm mb-0 align-middle text-muted">
+          <thead class="table-light">
+            <tr>
+              <th style="width:36px"></th>
+              <th>Merchant</th>
+              <th>Category</th>
+              <th>Saved Keyword</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in approved %}
+            <tr>
+              <td>
+                {% if item.get('transaction_type') == 'income' %}
+                  <span class="badge bg-success">+</span>
+                {% else %}
+                  <span class="badge bg-danger">&minus;</span>
+                {% endif %}
+              </td>
+              <td class="font-monospace small">{{ item.name }}</td>
+              <td><span class="badge bg-secondary">{{ item.category }}</span></td>
+              <td class="font-monospace small">{{ item.keyword }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 {% endif %}
 
 {% endblock %}
@@ -72,6 +146,29 @@
 <script>
 document.getElementById('select-all').addEventListener('change', function() {
   document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
+});
+
+// Edit-keyword toggle: pencil unlocks input, check locks it again
+document.querySelectorAll('.edit-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var inputName = this.getAttribute('data-target');
+    var input = document.querySelector('[name="' + inputName + '"]');
+    var icon = this.querySelector('i');
+    if (input.readOnly) {
+      input.readOnly = false;
+      input.tabIndex = 0;
+      input.style.cssText = 'cursor:text; pointer-events:auto;';
+      icon.className = 'bi bi-check2';
+      this.classList.replace('btn-outline-secondary', 'btn-outline-success');
+      input.focus();
+    } else {
+      input.readOnly = true;
+      input.tabIndex = -1;
+      input.style.cssText = 'background:#f8f9fa; cursor:default; pointer-events:none; border-color:#dee2e6;';
+      icon.className = 'bi bi-pencil';
+      this.classList.replace('btn-outline-success', 'btn-outline-secondary');
+    }
+  });
 });
 </script>
 {% endblock %}

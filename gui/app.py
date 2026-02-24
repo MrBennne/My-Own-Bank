@@ -3,16 +3,26 @@ import os
 import sys
 import subprocess
 import yaml
+from datetime import date, timedelta
 from functools import wraps
 from flask import (
     Flask, render_template, request, redirect,
-    url_for, flash, session,
+    url_for, flash, session, jsonify,
 )
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from src.pb_client import PocketBaseClient
+from src.parser import parse_csv
+from src.categorizer import Categorizer
+from src.pb_deduplicator import PocketBaseDeduplicator
+from src.pb_uploader import PocketBaseUploader
+from src.pb_learner import PocketBaseLearner
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_FILE = os.path.join(BASE_DIR, 'config.yaml')
 CATEGORIES_FILE = os.path.join(BASE_DIR, 'categories.json')
 PENDING_FILE = os.path.join(BASE_DIR, 'data', 'pending_rules.json')
+APPROVED_FILE = os.path.join(BASE_DIR, 'data', 'approved_rules.json')
 
 app = Flask(__name__)
 
@@ -47,6 +57,100 @@ def save_pending(pending):
     os.makedirs(os.path.dirname(PENDING_FILE), exist_ok=True)
     with open(PENDING_FILE, 'w', encoding='utf-8') as f:
         json.dump(pending, f, indent=2, ensure_ascii=False)
+
+def load_approved():
+    if os.path.exists(APPROVED_FILE):
+        with open(APPROVED_FILE, encoding='utf-8') as f:
+            return json.load(f)
+    return []
+
+def save_approved(approved):
+    os.makedirs(os.path.dirname(APPROVED_FILE), exist_ok=True)
+    with open(APPROVED_FILE, 'w', encoding='utf-8') as f:
+        json.dump(approved, f, indent=2, ensure_ascii=False)
+
+def period_dates(period):
+    today = date.today()
+    if period == 'this_month':
+        return date(today.year, today.month, 1).isoformat(), None
+    elif period == 'last_month':
+        last = date(today.year, today.month, 1) - timedelta(days=1)
+        return date(last.year, last.month, 1).isoformat(), last.isoformat()
+    elif period == 'last_3m':
+        m, y = today.month - 3, today.year
+        if m <= 0: m += 12; y -= 1
+        return date(y, m, 1).isoformat(), None
+    elif period == 'last_6m':
+        m, y = today.month - 6, today.year
+        if m <= 0: m += 12; y -= 1
+        return date(y, m, 1).isoformat(), None
+    elif period == 'this_year':
+        return date(today.year, 1, 1).isoformat(), None
+    elif period == 'last_year':
+        return date(today.year - 1, 1, 1).isoformat(), date(today.year - 1, 12, 31).isoformat()
+    return None, None  # all time
+
+
+def get_stats(cfg, since_date=None, until_date=None):
+    pb = PocketBaseClient(cfg)
+    expenses_by_cat = {}
+    monthly = {}
+    total_income = 0.0
+    total_expense = 0.0
+
+    filters = []
+    if since_date:
+        filters.append(f'date >= "{since_date}"')
+    if until_date:
+        filters.append(f'date <= "{until_date}"')
+
+    base_params = {'perPage': 500, 'fields': 'amount,category,type,date'}
+    if filters:
+        base_params['filter'] = ' && '.join(filters)
+
+    page = 1
+    while True:
+        data = pb.get('/api/collections/transactions/records',
+                      params={**base_params, 'page': page}).json()
+        for rec in data.get('items', []):
+            amt = abs(rec.get('amount', 0) or 0)
+            cat = rec.get('category', 'Uncategorized')
+            tx_type = rec.get('type', 'Expense')
+            month_key = (rec.get('date') or '')[:7]
+            if tx_type == 'Expense':
+                expenses_by_cat[cat] = expenses_by_cat.get(cat, 0) + amt
+                total_expense += amt
+            else:
+                total_income += amt
+            if month_key:
+                m = monthly.setdefault(month_key, {'income': 0.0, 'expense': 0.0})
+                if tx_type == 'Income':
+                    m['income'] += amt
+                else:
+                    m['expense'] += amt
+        if page >= data.get('totalPages', 1):
+            break
+        page += 1
+
+    sorted_months = sorted(monthly.keys())
+    net = round(total_income - total_expense, 2)
+    savings_rate = round(net / total_income * 100, 1) if total_income > 0 else 0.0
+    avg_monthly = round(total_expense / max(len(sorted_months), 1), 2)
+
+    return {
+        'expenses_by_cat': dict(
+            sorted(expenses_by_cat.items(), key=lambda x: x[1], reverse=True)[:10]
+        ),
+        'monthly_labels': sorted_months,
+        'monthly_income': [round(monthly[m]['income'], 2) for m in sorted_months],
+        'monthly_expense': [round(monthly[m]['expense'], 2) for m in sorted_months],
+        'net_savings': [round(monthly[m]['income'] - monthly[m]['expense'], 2) for m in sorted_months],
+        'total_income': round(total_income, 2),
+        'total_expense': round(total_expense, 2),
+        'net': net,
+        'savings_rate': savings_rate,
+        'avg_monthly_expense': avg_monthly,
+    }
 
 
 # ── Auth ─────────────────────────────────────────────────────────────────────
@@ -84,10 +188,18 @@ def index():
     cfg = load_config()
     cats = load_categories()
     pending = load_pending()
+    period = request.args.get('period', 'all')
+    try:
+        since, until = period_dates(period)
+        stats = get_stats(cfg, since, until)
+    except Exception:
+        stats = None
     return render_template('index.html',
         config=cfg,
         category_count=len(cats),
         pending_count=len(pending),
+        stats=stats,
+        period=period,
     )
 
 
@@ -178,34 +290,159 @@ def review():
     if request.method == 'POST':
         cats = load_categories()
         approved_ids = set(request.form.getlist('approve'))
+        dismissed_ids = set(request.form.getlist('dismiss'))
+        approved_archive = load_approved()
 
         for item in pending:
             pid = item['page_id']
             if pid in approved_ids:
                 keyword = request.form.get(f'keyword_{pid}', item['keyword']).strip()
-                category = item['category']
+                category = request.form.get(f'category_{pid}', item['category']).strip() or item['category']
                 if keyword and category:
                     cats.setdefault(category, [])
                     if keyword not in cats[category]:
                         cats[category].append(keyword)
                 item['approved'] = True
+                approved_archive.append({**item, 'keyword': keyword})
+            elif pid in dismissed_ids:
+                item['approved'] = True  # remove from pending without saving rule
 
         pending = [p for p in pending if not p.get('approved')]
         save_categories(cats)
         save_pending(pending)
+        save_approved(approved_archive)
         flash('Rules updated.', 'success')
         return redirect(url_for('review'))
 
-    return render_template('review.html', pending=pending)
+    approved = load_approved()
+    cats = load_categories()
+    return render_template('review.html', pending=pending, approved=approved, categories=list(cats.keys()))
+
+
+@app.route('/upload', methods=['GET', 'POST'])
+@login_required
+def upload():
+    if request.method == 'POST':
+        f = request.files.get('csv_file')
+        if not f or not f.filename:
+            flash('No file selected.', 'danger')
+            return redirect(url_for('upload'))
+
+        cfg = load_config()
+        content = f.read().decode('utf-8-sig')
+        transactions = parse_csv(content)
+
+        categorizer = Categorizer(CATEGORIES_FILE)
+        categorized, uncategorized = categorizer.categorize(transactions)
+        all_tx = categorized + uncategorized
+
+        deduplicator = PocketBaseDeduplicator(cfg)
+        new_tx = deduplicator.filter_new(all_tx)
+
+        if not new_tx:
+            flash('No new transactions found (all already imported).', 'info')
+            return redirect(url_for('upload'))
+
+        uploader = PocketBaseUploader(cfg)
+        new_uncat = [tx for tx in new_tx if tx['category'] == 'Uncategorized']
+        new_cat = [tx for tx in new_tx if tx['category'] != 'Uncategorized']
+
+        uploader.upload(new_cat)
+        if new_uncat:
+            uploader.upload(new_uncat)
+
+        learner = PocketBaseLearner(cfg)
+        learner.scan_for_recategorized()
+
+        flash(
+            f'Imported {len(new_tx)} transactions '
+            f'({len(new_cat)} categorized, {len(new_uncat)} uncategorized).',
+            'success',
+        )
+        return redirect(url_for('upload'))
+
+    return render_template('upload.html')
+
+
+@app.route('/transactions')
+@login_required
+def transactions():
+    cfg = load_config()
+    pb = PocketBaseClient(cfg)
+
+    page = int(request.args.get('page', 1))
+    search = request.args.get('search', '').strip()
+    cat_filter = request.args.get('category', '').strip()
+    type_filter = request.args.get('type', '').strip()
+    sort_by = request.args.get('sort_by', 'date')
+    sort_order = request.args.get('sort_order', 'desc')
+
+    valid_sorts = {'date', 'name', 'amount', 'category'}
+    if sort_by not in valid_sorts:
+        sort_by = 'date'
+    pb_sort = f'{"-" if sort_order == "desc" else ""}{sort_by}'
+
+    filters = []
+    if search:
+        filters.append(f'name~"{search}"')
+    if cat_filter:
+        filters.append(f'category="{cat_filter}"')
+    if type_filter:
+        filters.append(f'type="{type_filter}"')
+
+    params = {
+        'perPage': 50,
+        'page': page,
+        'sort': pb_sort,
+        'fields': 'id,date,name,amount,currency,category,type',
+    }
+    if filters:
+        params['filter'] = ' && '.join(filters)
+
+    r = pb.get('/api/collections/transactions/records', params=params)
+    data = r.json()
+
+    cats = list(load_categories().keys())
+    return render_template('transactions.html',
+        records=data.get('items', []),
+        total_pages=data.get('totalPages', 1),
+        current_page=page,
+        total=data.get('totalItems', 0),
+        search=search,
+        cat_filter=cat_filter,
+        type_filter=type_filter,
+        categories=cats,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
+
+
+@app.route('/transactions/<record_id>/update', methods=['POST'])
+@login_required
+def update_transaction(record_id):
+    cfg = load_config()
+    pb = PocketBaseClient(cfg)
+    category = request.form.get('category', '').strip()
+    if category:
+        pb.patch(f'/api/collections/transactions/records/{record_id}',
+                 json={'category': category})
+        try:
+            PocketBaseLearner(cfg).scan_for_recategorized()
+        except Exception:
+            pass
+    return redirect(request.referrer or url_for('transactions'))
 
 
 @app.route('/run', methods=['POST'])
 @login_required
 def run_now():
     main_py = os.path.join(BASE_DIR, 'main.py')
-    subprocess.Popen([sys.executable, main_py, '--once'])
-    flash('Processing started. Check server logs for progress.', 'success')
-    return redirect(url_for('index'))
+    result = subprocess.run(
+        [sys.executable, main_py, '--once'],
+        capture_output=True, text=True, cwd=BASE_DIR
+    )
+    output = (result.stdout + result.stderr).strip()
+    return render_template('run_result.html', output=output, returncode=result.returncode)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
@@ -220,4 +457,4 @@ if __name__ == '__main__':
     application = create_app()
     cfg = load_config()
     port = cfg.get('gui', {}).get('port', 5000)
-    application.run(host='0.0.0.0', port=port, debug=False)
+    application.run(host='0.0.0.0', port=port, debug=True)
