@@ -16,7 +16,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Added
 - **Infinite Scroll** — Transactions list auto-loads the next page when scrolling near the bottom, replacing the manual "Load more" button. A spinner appears at the bottom while loading.
 - **Persist Filter/Sort State** — Search query, selected category, transaction type, sort field, and sort direction are saved to SharedPreferences. Filters survive tab navigation and app restarts.
-- **Category Dropdown by Frequency** — The category filter dropdown now sorts categories by usage count (most-used first) and shows the count in parentheses, e.g. "Groceries (42)". Frequency updates as more transactions are loaded via infinite scroll.
+- **Category Dropdown by Frequency** — The category filter dropdown sorts categories by usage count (most-used first) and shows the count in parentheses, e.g. "Groceries (42)". Frequency is pre-loaded from all transactions in the past 3 months for an accurate view of top spending categories.
 - **Dashboard Local Caching** — Aggregated dashboard data (KPIs, category totals, monthly bars) is cached in SharedPreferences with a 5-minute staleness window. The dashboard loads instantly from cache on repeat visits. Pull-to-refresh and the refresh button force a fresh API fetch.
 
 ---
