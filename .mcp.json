@@ -6,6 +6,10 @@
       "env": {
         "POCKETBASE_URL": "http://locserv.tail18bcbb.ts.net:8091"
       }
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/context7-mcp"]
     }
   }
 }

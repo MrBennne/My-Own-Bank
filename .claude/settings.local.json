@@ -31,5 +31,28 @@
       "WebFetch(domain:www.katheats.com)",
       "WebFetch(domain:accordingtoandrea.com)"
     ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "pocketbase"
+  ],
+  "enabledPlugins": {
+    "ultrathink@cc-marketplace": true,
+    "serena@claude-plugins-official": true
+  },
+  "outputStyle": "Explanatory",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /c/Users/Benjamin/workspace/banking/mobile && dart format lib/ 2>&1",
+            "statusMessage": "Formatting Dart files..."
+          }
+        ]
+      }
+    ]
   }
 }
