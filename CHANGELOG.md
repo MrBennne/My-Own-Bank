@@ -13,6 +13,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Fixed
 - **Transaction Count KPI** — Dashboard KPI strip now shows the actual transaction count instead of a dash placeholder.
 - **Category Dropdown Sync** — The category filter dropdown now listens for changes in PocketBase and stays in sync if categories are added/removed or refreshed.
+- **Keyword Matching False Positives** — Category keywords are now matched longest-first globally, so "Lønoverførsel" correctly categorizes as income rather than being mis-categorized as a transfer.
 
 #### Added
 - **Infinite Scroll** — Transactions list auto-loads the next page when scrolling near the bottom, replacing the manual "Load more" button. A spinner appears at the bottom while loading.
