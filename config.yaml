@@ -1,24 +1,24 @@
-google_drive:
-  service_account_file: config/service_account.json
-  folder_id: ""                  # Paste your Google Drive folder ID here
-  processed_folder_name: processed
-
-notion:
-  token: ""                      # Your Notion integration token
-  database_id: 30f3379e-f16a-8146-a8bd-000bf2e19e1c
-
+categories_file: categories.json
+data_dir: data
 email:
+  app_password: jdyn bntb qljz wkgi
+  recipient: bgnissen@gmail.com
   smtp_host: smtp.gmail.com
   smtp_port: 587
   username: bgnissen@gmail.com
-  app_password: ""               # Gmail App Password (not your regular password)
-  recipient: bgnissen@gmail.com
-
+google_drive:
+  folder_id: '1LrQJpjLpt8rCdnyJG4BRHNnBcNmME7Hb'
+  processed_folder_name: processed
+  service_account_file: config/service_account.json
 gui:
+  password: changeme
   port: 5000
-  password: changeme             # Password to access the web GUI
   secret_key: change-this-to-something-random
-
+notion:
+  database_id: 3103379e-f16a-8155-aedc-d69e17d727d8
+  token: ''  # set your Notion API token here
+pocketbase:
+  url: 'http://locserv.tail18bcbb.ts.net:8091'
+  email: 'banking@mybank.local'
+  password: 'Banking#Q-CsEdIGYdvDxx0X'
 poll_interval_minutes: 15
-categories_file: categories.json
-data_dir: data

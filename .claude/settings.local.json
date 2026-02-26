@@ -2,7 +2,34 @@
   "permissions": {
     "allow": [
       "Bash(git init:*)",
-      "mcp__claude_ai_Notion__notion-fetch"
+      "mcp__claude_ai_Notion__notion-fetch",
+      "Bash(cd /c/Users/Benjamin/workspace/banking && python - <<'EOF'\nimport yaml\nfrom googleapiclient.discovery import build\nfrom google.oauth2 import service_account\n\nwith open\\('config.yaml'\\) as f:\n    config = yaml.safe_load\\(f\\)\n\nsa_file = config['google_drive']['service_account_file']\nfolder_id = config['google_drive']['folder_id']\n\ncreds = service_account.Credentials.from_service_account_file\\(\n    sa_file, scopes=['https://www.googleapis.com/auth/drive']\n\\)\nservice = build\\('drive', 'v3', credentials=creds\\)\n\n# List ALL files in the folder \\(no mime filter\\)\nresults = service.files\\(\\).list\\(\n    q=f\"'{folder_id}' in parents and trashed=false\",\n    fields='files\\(id, name, mimeType, owners\\)'\n\\).execute\\(\\)\n\nfiles = results.get\\('files', []\\)\nprint\\(f\"Files visible to service account in folder: {len\\(files\\)}\"\\)\nfor f in files:\n    print\\(f\"  {f['name']} | {f['mimeType']} | {f.get\\('owners',''\\)}\"\\)\n\n# Also check folder itself\nfolder = service.files\\(\\).get\\(fileId=folder_id, fields='id,name,owners'\\).execute\\(\\)\nprint\\(f\"\\\\nFolder: {folder}\"\\)\nEOF\n2>&1)",
+      "Bash(cd /c/Users/Benjamin/workspace/banking && python main.py --once 2>&1)",
+      "Bash(cd /c/Users/Benjamin/workspace/banking && python -c \"\nimport httpx, json\ntoken = 'REDACTED'\n# Get child blocks of the page to find the inline database\nr = httpx.get\\('https://api.notion.com/v1/blocks/30f3379e-f16a-8171-b87b-cc0aea908466/children', headers={'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28'}\\)\ndata = r.json\\(\\)\nfor block in data.get\\('results', []\\):\n    t = block.get\\('type',''\\)\n    print\\(t, block['id']\\)\n\" 2>&1)",
+      "Bash(cd /c/Users/Benjamin/workspace/banking && python -c \"\nimport httpx, json\ntoken = 'REDACTED'\npage_id = '30f3379e-f16a-8171-b87b-cc0aea908466'\n\n# Create a new database inside the existing page\npayload = {\n    'parent': {'type': 'page_id', 'page_id': page_id},\n    'title': [{'type': 'text', 'text': {'content': 'Transactions'}}],\n    'properties': {\n        'n': {'title': {}},\n        'Date': {'date': {}},\n        'Amount': {'number': {'format': 'number'}},\n        'Category': {'select': {'options': []}},\n        'Account': {'select': {'options': [{'name': 'Lønkonto', 'color': 'blue'}]}},\n        'Currency': {'select': {'options': [{'name': 'DKK', 'color': 'gray'}]}},\n    }\n}\nr = httpx.post\\('https://api.notion.com/v1/databases', headers={'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json'}, json=payload, timeout=30\\)\ndata = r.json\\(\\)\nif 'id' in data:\n    print\\('Created database ID:', data['id']\\)\nelse:\n    print\\('Error:', json.dumps\\(data\\)[:500]\\)\n\" 2>&1)",
+      "Bash(cd /c/Users/Benjamin/workspace/banking && python -c \"\nimport httpx, json\ntoken = 'REDACTED'\npage_id = '30f3379e-f16a-8171-b87b-cc0aea908466'\nr = httpx.get\\('https://api.notion.com/v1/blocks/' + page_id + '/children?page_size=100', headers={'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28'}\\)\nfor b in r.json\\(\\).get\\('results', []\\):\n    title = ''\n    if b['type'] == 'child_database':\n        title = b['child_database'].get\\('title', ''\\)\n    print\\(b['type'], b['id'], repr\\(title\\)\\)\n\" 2>&1)",
+      "Bash(cd /c/Users/Benjamin/workspace/banking && python -c \"\nimport httpx\ntoken = 'REDACTED'\nheaders = {'Authorization': 'Bearer ' + token, 'Notion-Version': '2022-06-28'}\nto_delete = [\n    '30f3379e-f16a-81cd-be1c-f10543522c17',  # Finance Database and New data source\n    '30f3379e-f16a-81fb-ad43-cd85a79ef073',  # empty paragraph\n]\nfor block_id in to_delete:\n    r = httpx.delete\\('https://api.notion.com/v1/blocks/' + block_id, headers=headers\\)\n    print\\(block_id, r.status_code\\)\n\" 2>&1)",
+      "WebFetch(domain:github.com)",
+      "mcp__MCP_DOCKER__mcp-find",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:www.juheapi.com)",
+      "Bash(cd:*)",
+      "Bash(grep:*)",
+      "Bash(flutter:*)",
+      "Bash(python3:*)",
+      "Bash(/c/Users/Benjamin/Miniconda3/python.exe:*)",
+      "Bash(tail:*)",
+      "Bash(cd /c/Users/Benjamin/workspace/banking/mobile && /c/Users/Benjamin/flutter/bin/flutter build apk --release 2>&1)",
+      "Bash(taskkill:*)",
+      "Bash(cd /c/Users/Benjamin/workspace/banking && python -c \"\nimport requests\n\nPB = 'http://locserv.tail18bcbb.ts.net:8091'\nEMAIL = 'banking@mybank.local'\nPW = 'Banking#Q-CsEdIGYdvDxx0X'\n\n# Auth\nr = requests.post\\(f'{PB}/api/collections/users/auth-with-password', json={'identity': EMAIL, 'password': PW}\\)\ntoken = r.json\\(\\)['token']\nheaders = {'Authorization': token}\n\n# Delete all transactions in batches\ndeleted = 0\nwhile True:\n    resp = requests.get\\(f'{PB}/api/collections/transactions/records', params={'perPage': 200, 'fields': 'id'}, headers=headers\\)\n    data = resp.json\\(\\)\n    items = data.get\\('items', []\\)\n    if not items:\n        break\n    for item in items:\n        requests.delete\\(f'{PB}/api/collections/transactions/records/{item[\\\\\"id\\\\\"]}', headers=headers\\)\n        deleted += 1\n\nprint\\(f'Deleted {deleted} transactions. PocketBase is now empty.'\\)\n\" 2>&1)",
+      "Bash(/c/Users/Benjamin/Miniconda3/python:*)",
+      "Bash(head:*)",
+      "Bash(curl -s \"http://locserv.tail18bcbb.ts.net:8091/api/collections/categories/records?perPage=50&sort=name\" -H \"Content-Type: application/json\" | python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(r['name']\\) for r in data['items']]\" 2>&1 || curl -s \"http://locserv.tail18bcbb.ts.net:8091/api/collections/categories/records?perPage=50&sort=name\" -H \"Content-Type: application/json\" | python -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(r['name']\\) for r in data['items']]\" 2>&1)",
+      "Bash(curl:*)",
+      "WebFetch(domain:mint.intuit.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:www.katheats.com)",
+      "WebFetch(domain:accordingtoandrea.com)"
     ]
   }
 }
