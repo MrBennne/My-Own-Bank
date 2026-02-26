@@ -84,7 +84,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         if (mounted) _loadCategories();
       }).catchError((e) {
         print('Failed to load categories: $e');
-        if (mounted) _loadCategories(); // Load anyway, will only have Uncategorized
+        if (mounted)
+          _loadCategories(); // Load anyway, will only have Uncategorized
       });
     }
 
@@ -135,7 +136,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Future<void> _loadCategoryFrequencyFromPast3Months() async {
     try {
       final now = DateTime.now();
-      final from = DateTime(now.year, now.month - 2, 1); // First day of 3 months ago
+      final from =
+          DateTime(now.year, now.month - 2, 1); // First day of 3 months ago
       final fromStr =
           '${from.year}-${from.month.toString().padLeft(2, '0')}-${from.day.toString().padLeft(2, '0')}';
       final toStr =
@@ -160,7 +162,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       if (mounted) {
         setState(() => _categoryFrequency = freq);
       }
-      print('Loaded frequency for ${freq.length} categories from ${result.items.length} transactions');
+      print(
+          'Loaded frequency for ${freq.length} categories from ${result.items.length} transactions');
     } catch (e) {
       print('Failed to load category frequency: $e');
     }
@@ -188,8 +191,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         page: reset ? 1 : _page,
         perPage: _perPage,
         search: _searchQuery.isNotEmpty ? _searchQuery : null,
-        category:
-            _selectedCategory.isNotEmpty ? _selectedCategory : null,
+        category: _selectedCategory.isNotEmpty ? _selectedCategory : null,
         type: _selectedType != 'All' ? _selectedType : null,
         sort: _sortParam,
       );
@@ -265,8 +267,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           );
           if (mounted) {
             setState(() {
-              final idx =
-                  _transactions.indexWhere((t) => t.id == tx.id);
+              final idx = _transactions.indexWhere((t) => t.id == tx.id);
               if (idx != -1) {
                 _transactions[idx] = tx.copyWith(
                   category: result.category,
@@ -277,7 +278,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Category updated to "${result.subcategory.isNotEmpty ? result.subcategory : result.category}"'),
+                content: Text(
+                    'Category updated to "${result.subcategory.isNotEmpty ? result.subcategory : result.category}"'),
                 backgroundColor: AppTheme.income,
                 duration: const Duration(seconds: 2),
               ),
@@ -315,9 +317,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _totalItems > 0
-              ? 'Transactions ($_totalItems)'
-              : 'Transactions',
+          _totalItems > 0 ? 'Transactions ($_totalItems)' : 'Transactions',
         ),
         actions: [
           IconButton(
@@ -358,34 +358,41 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             children: [
               Expanded(
                 child: _DropdownFilter(
-                  value: _selectedCategory.isEmpty
-                      ? 'All'
-                      : _selectedCategory,
+                  value: _selectedCategory.isEmpty ? 'All' : _selectedCategory,
                   hint: 'All Categories',
                   items: [
-                    const DropdownMenuItem(
-                        value: 'All', child: Text('All')),
-                    ...(_categories
-                            .where((c) => c.isNotEmpty)
-                            .toList()
-                          ..sort((a, b) => (_categoryFrequency[b] ?? 0)
-                              .compareTo(_categoryFrequency[a] ?? 0)))
+                    const DropdownMenuItem(value: 'All', child: Text('All')),
+                    ...(_categories.where((c) => c.isNotEmpty).toList())
                         .map((c) {
-                      final count = _categoryFrequency[c];
-                      final label = count != null ? '$c ($count)' : c;
+                      final color = CategoryService.instance.colorFor(c);
                       return DropdownMenuItem(
                         value: c,
-                        child: Text(
-                          label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                c,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }),
                   ],
                   onChanged: (v) {
-                    setState(() =>
-                        _selectedCategory = v == 'All' ? '' : v ?? '');
+                    setState(
+                        () => _selectedCategory = v == 'All' ? '' : v ?? '');
                     _saveFilters();
                     _fetchTransactions(reset: true);
                   },
@@ -397,8 +404,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 hint: 'Type',
                 items: _typeOptions
                     .map(
-                      (t) =>
-                          DropdownMenuItem(value: t, child: Text(t)),
+                      (t) => DropdownMenuItem(value: t, child: Text(t)),
                     )
                     .toList(),
                 onChanged: (v) {
@@ -451,12 +457,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               selectedColor: AppTheme.primary.withAlpha(51),
               checkmarkColor: AppTheme.primary,
               labelStyle: TextStyle(
-                color:
-                    isActive ? AppTheme.primary : AppTheme.onSurface,
+                color: isActive ? AppTheme.primary : AppTheme.onSurface,
                 fontSize: 12,
               ),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           );
@@ -506,8 +510,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return ListView.separated(
       controller: _scrollController,
       padding: const EdgeInsets.only(bottom: 16),
-      itemCount:
-          _transactions.length + (_page <= _totalPages ? 1 : 0),
+      itemCount: _transactions.length + (_page <= _totalPages ? 1 : 0),
       separatorBuilder: (_, __) =>
           const Divider(height: 1, indent: 16, endIndent: 16),
       itemBuilder: (ctx, i) {
@@ -559,8 +562,7 @@ class _DropdownFilter extends StatelessWidget {
           items: items,
           onChanged: onChanged,
           dropdownColor: AppTheme.surfaceVariant,
-          style: const TextStyle(
-              color: AppTheme.onSurface, fontSize: 13),
+          style: const TextStyle(color: AppTheme.onSurface, fontSize: 13),
           isDense: true,
           isExpanded: false,
           icon: const Icon(Icons.keyboard_arrow_down_rounded,
@@ -611,8 +613,7 @@ class _TransactionTile extends StatelessWidget {
     return InkWell(
       onTap: onCategoryTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Container(
@@ -664,12 +665,10 @@ class _TransactionTile extends StatelessWidget {
                         Expanded(
                           child: Text(
                             tx.account,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color: AppTheme.onSurfaceMuted,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: AppTheme.onSurfaceMuted,
+                                    ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
