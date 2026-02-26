@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction.dart';
@@ -165,13 +167,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   void _saveFilters() {
-    SettingsService.instance.saveTransactionFilters(
+    unawaited(SettingsService.instance.saveTransactionFilters(
       searchQuery: _searchQuery,
       selectedCategory: _selectedCategory,
       selectedType: _selectedType,
       sortField: _sortField,
       sortAsc: _sortAsc,
-    );
+    ));
   }
 
   Future<void> _openCategorySheet(Transaction tx) async {

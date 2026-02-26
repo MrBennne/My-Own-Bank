@@ -69,36 +69,12 @@ class SettingsService extends ChangeNotifier {
   static const _txSortAscKey = 'tx_sort_asc';
 
   String get txSearchQuery => _prefs.getString(_txSearchQueryKey) ?? '';
-
-  set txSearchQuery(String value) {
-    _prefs.setString(_txSearchQueryKey, value);
-  }
-
   String get txSelectedCategory =>
       _prefs.getString(_txSelectedCategoryKey) ?? '';
-
-  set txSelectedCategory(String value) {
-    _prefs.setString(_txSelectedCategoryKey, value);
-  }
-
   String get txSelectedType =>
       _prefs.getString(_txSelectedTypeKey) ?? 'All';
-
-  set txSelectedType(String value) {
-    _prefs.setString(_txSelectedTypeKey, value);
-  }
-
   String get txSortField => _prefs.getString(_txSortFieldKey) ?? 'date';
-
-  set txSortField(String value) {
-    _prefs.setString(_txSortFieldKey, value);
-  }
-
   bool get txSortAsc => _prefs.getBool(_txSortAscKey) ?? false;
-
-  set txSortAsc(bool value) {
-    _prefs.setBool(_txSortAscKey, value);
-  }
 
   Future<void> saveTransactionFilters({
     required String searchQuery,
