@@ -57,4 +57,63 @@ class SettingsService extends ChangeNotifier {
     await _prefs.setBool(_alwaysUncategorizedKey, value);
     notifyListeners();
   }
+
+  // -------------------------------------------------------------------------
+  // Transaction filters & sort
+  // -------------------------------------------------------------------------
+
+  static const _txSearchQueryKey = 'tx_search_query';
+  static const _txSelectedCategoryKey = 'tx_selected_category';
+  static const _txSelectedTypeKey = 'tx_selected_type';
+  static const _txSortFieldKey = 'tx_sort_field';
+  static const _txSortAscKey = 'tx_sort_asc';
+
+  String get txSearchQuery => _prefs.getString(_txSearchQueryKey) ?? '';
+
+  set txSearchQuery(String value) {
+    _prefs.setString(_txSearchQueryKey, value);
+  }
+
+  String get txSelectedCategory =>
+      _prefs.getString(_txSelectedCategoryKey) ?? '';
+
+  set txSelectedCategory(String value) {
+    _prefs.setString(_txSelectedCategoryKey, value);
+  }
+
+  String get txSelectedType =>
+      _prefs.getString(_txSelectedTypeKey) ?? 'All';
+
+  set txSelectedType(String value) {
+    _prefs.setString(_txSelectedTypeKey, value);
+  }
+
+  String get txSortField => _prefs.getString(_txSortFieldKey) ?? 'date';
+
+  set txSortField(String value) {
+    _prefs.setString(_txSortFieldKey, value);
+  }
+
+  bool get txSortAsc => _prefs.getBool(_txSortAscKey) ?? false;
+
+  set txSortAsc(bool value) {
+    _prefs.setBool(_txSortAscKey, value);
+  }
+
+  Future<void> saveTransactionFilters({
+    required String searchQuery,
+    required String selectedCategory,
+    required String selectedType,
+    required String sortField,
+    required bool sortAsc,
+  }) async {
+    await Future.wait([
+      _prefs.setString(_txSearchQueryKey, searchQuery),
+      _prefs.setString(_txSelectedCategoryKey, selectedCategory),
+      _prefs.setString(_txSelectedTypeKey, selectedType),
+      _prefs.setString(_txSortFieldKey, sortField),
+      _prefs.setBool(_txSortAscKey, sortAsc),
+    ]);
+    notifyListeners();
+  }
 }

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/transaction.dart';
 import '../services/api_service.dart';
 import '../services/category_service.dart';
+import '../services/settings_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/category_bottom_sheet.dart';
 
@@ -71,6 +72,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _loadCategories();
+
+    final settings = SettingsService.instance;
+    _searchQuery = settings.txSearchQuery;
+    _selectedCategory = settings.txSelectedCategory;
+    _selectedType = settings.txSelectedType;
+    _sortField = settings.txSortField;
+    _sortAsc = settings.txSortAsc;
+    _searchController.text = _searchQuery;
+
     _fetchTransactions(reset: true);
   }
 
@@ -150,7 +160,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   void _onSearchChanged(String v) {
     _searchQuery = v;
+    _saveFilters();
     _fetchTransactions(reset: true);
+  }
+
+  void _saveFilters() {
+    SettingsService.instance.saveTransactionFilters(
+      searchQuery: _searchQuery,
+      selectedCategory: _selectedCategory,
+      selectedType: _selectedType,
+      sortField: _sortField,
+      sortAsc: _sortAsc,
+    );
   }
 
   Future<void> _openCategorySheet(Transaction tx) async {
@@ -219,6 +240,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         _sortAsc = false;
       }
     });
+    _saveFilters();
     _fetchTransactions(reset: true);
   }
 
@@ -287,6 +309,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   onChanged: (v) {
                     setState(() =>
                         _selectedCategory = v == 'All' ? '' : v ?? '');
+                    _saveFilters();
                     _fetchTransactions(reset: true);
                   },
                 ),
@@ -303,6 +326,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     .toList(),
                 onChanged: (v) {
                   setState(() => _selectedType = v ?? 'All');
+                  _saveFilters();
                   _fetchTransactions(reset: true);
                 },
               ),
