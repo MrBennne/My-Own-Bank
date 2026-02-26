@@ -44,6 +44,7 @@ class TransactionsScreen extends StatefulWidget {
 class _TransactionsScreenState extends State<TransactionsScreen> {
   final _api = ApiService();
   final _searchController = TextEditingController();
+  final _scrollController = ScrollController();
 
   List<Transaction> _transactions = [];
   List<String> _categories = [''];
@@ -68,14 +69,25 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _loadCategories();
     _fetchTransactions(reset: true);
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_loadingMore || _page > _totalPages) return;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+    if (currentScroll >= maxScroll - 200) {
+      _fetchTransactions();
+    }
   }
 
   void _loadCategories() {
@@ -391,6 +403,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
 
     return ListView.separated(
+      controller: _scrollController,
       padding: const EdgeInsets.only(bottom: 16),
       itemCount:
           _transactions.length + (_page <= _totalPages ? 1 : 0),
@@ -398,26 +411,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           const Divider(height: 1, indent: 16, endIndent: 16),
       itemBuilder: (ctx, i) {
         if (i == _transactions.length) {
-          return _loadingMore
-              ? const Padding(
-                  padding: EdgeInsets.all(16),
-                  child:
-                      Center(child: CircularProgressIndicator()),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: OutlinedButton(
-                    onPressed: () => _fetchTransactions(),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.primary,
-                      side: const BorderSide(
-                          color: AppTheme.primary),
-                    ),
-                    child: Text(
-                      'Load more (${_totalItems - _transactions.length} remaining)',
-                    ),
-                  ),
-                );
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
         final tx = _transactions[i];
