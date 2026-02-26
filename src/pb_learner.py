@@ -10,7 +10,7 @@ APPROVED_RULES = 'data/approved_rules.json'
 class PocketBaseLearner:
     def __init__(self, config):
         self.client = PocketBaseClient(config)
-        self.categories_file = config.get('categories_file', 'categories.json')
+        self.categories_file = os.path.abspath(config.get('categories_file', 'categories.json'))
         os.makedirs('data', exist_ok=True)
 
     def _load_json(self, path):

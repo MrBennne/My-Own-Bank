@@ -64,9 +64,17 @@ class Categorizer:
                     return category
 
         type_rules = self.income_rules if tx_type == 'Income' else self.expense_rules
+        uncategorized_match = False
         for category, keywords in type_rules.items():
+            if category == 'Uncategorized':
+                if any(keyword.lower() in name_lower for keyword in keywords):
+                    uncategorized_match = True
+                continue
             for keyword in keywords:
                 if keyword.lower() in name_lower:
                     return category
 
+        # Return Uncategorized only if no other category matched
+        if uncategorized_match:
+            return 'Uncategorized'
         return None
