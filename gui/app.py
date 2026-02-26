@@ -20,7 +20,6 @@ from src.pb_learner import PocketBaseLearner
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_FILE = os.path.join(BASE_DIR, 'config.yaml')
-CATEGORIES_FILE = os.path.join(BASE_DIR, 'categories.json')
 PENDING_FILE = os.path.join(BASE_DIR, 'data', 'pending_rules.json')
 APPROVED_FILE = os.path.join(BASE_DIR, 'data', 'approved_rules.json')
 
@@ -36,16 +35,6 @@ def load_config():
 def save_config(cfg):
     with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
         yaml.dump(cfg, f, allow_unicode=True, default_flow_style=False)
-
-def load_categories():
-    if os.path.exists(CATEGORIES_FILE):
-        with open(CATEGORIES_FILE, encoding='utf-8') as f:
-            return json.load(f)
-    return {}
-
-def save_categories(cats):
-    with open(CATEGORIES_FILE, 'w', encoding='utf-8') as f:
-        json.dump(cats, f, indent=2, ensure_ascii=False)
 
 def load_pending():
     if os.path.exists(PENDING_FILE):
@@ -68,6 +57,56 @@ def save_approved(approved):
     os.makedirs(os.path.dirname(APPROVED_FILE), exist_ok=True)
     with open(APPROVED_FILE, 'w', encoding='utf-8') as f:
         json.dump(approved, f, indent=2, ensure_ascii=False)
+
+
+# ── PocketBase Category Helpers ──────────────────────────────────────────────
+
+def pb_fetch_categories(pb):
+    """Fetch all categories from PocketBase. Returns list of raw records."""
+    all_cats = []
+    page = 1
+    while True:
+        r = pb.get('/api/collections/categories/records', params={
+            'perPage': 500,
+            'page': page,
+            'sort': 'type,name',
+        })
+        data = r.json()
+        all_cats.extend(data.get('items', []))
+        if page >= data.get('totalPages', 1):
+            break
+        page += 1
+    return all_cats
+
+
+def pb_category_names(pb):
+    """Return sorted list of all category names from PocketBase."""
+    cats = pb_fetch_categories(pb)
+    names = sorted({c['name'] for c in cats})
+    return names
+
+
+def pb_add_keyword(pb, category_name, keyword):
+    """Find a category by name in PocketBase and append a keyword to it."""
+    r = pb.get('/api/collections/categories/records', params={
+        'filter': f'name="{category_name}"',
+        'fields': 'id,keywords',
+        'perPage': 1,
+    })
+    data = r.json()
+    items = data.get('items', [])
+    if not items:
+        return False
+    cat = items[0]
+    keywords = cat.get('keywords', []) or []
+    if keyword not in keywords:
+        keywords.append(keyword)
+        pb.patch(f'/api/collections/categories/records/{cat["id"]}',
+                 json={'keywords': keywords})
+    return True
+
+
+# ── Stats ────────────────────────────────────────────────────────────────────
 
 def period_dates(period):
     today = date.today()
@@ -186,13 +225,15 @@ def logout():
 @login_required
 def index():
     cfg = load_config()
-    cats = load_categories()
+    pb = PocketBaseClient(cfg)
     pending = load_pending()
     period = request.args.get('period', 'all')
     try:
+        cats = pb_fetch_categories(pb)
         since, until = period_dates(period)
         stats = get_stats(cfg, since, until)
     except Exception:
+        cats = []
         stats = None
     return render_template('index.html',
         config=cfg,
@@ -244,51 +285,75 @@ def setup():
 @app.route('/categories', methods=['GET', 'POST'])
 @login_required
 def categories():
-    cats = load_categories()
+    cfg = load_config()
+    pb = PocketBaseClient(cfg)
 
     if request.method == 'POST':
         action = request.form.get('action')
 
         if action == 'save':
-            new_cats = {}
+            # Update keywords for existing categories
+            cat_records = pb_fetch_categories(pb)
+            cat_by_name = {c['name']: c for c in cat_records}
             cat_names = request.form.getlist('cat_name')
             cat_keywords = request.form.getlist('cat_keywords')
             for name, kws in zip(cat_names, cat_keywords):
                 name = name.strip()
-                if name:
+                if name and name in cat_by_name:
                     keywords = [k.strip() for k in kws.splitlines() if k.strip()]
-                    new_cats[name] = keywords
-            save_categories(new_cats)
-            cats = new_cats
+                    rec = cat_by_name[name]
+                    if keywords != rec.get('keywords', []):
+                        pb.patch(
+                            f'/api/collections/categories/records/{rec["id"]}',
+                            json={'keywords': keywords},
+                        )
             flash('Categories saved.', 'success')
 
         elif action == 'add':
             new_name = request.form.get('new_cat_name', '').strip()
-            if new_name and new_name not in cats:
-                cats[new_name] = []
-                save_categories(cats)
-                flash(f'Category "{new_name}" added.', 'success')
-            elif new_name in cats:
-                flash(f'Category "{new_name}" already exists.', 'danger')
+            if new_name:
+                existing = pb_category_names(pb)
+                if new_name not in existing:
+                    pb.post('/api/collections/categories/records', json={
+                        'name': new_name,
+                        'type': 'expense',
+                        'group': '',
+                        'keywords': [],
+                    })
+                    flash(f'Category "{new_name}" added.', 'success')
+                else:
+                    flash(f'Category "{new_name}" already exists.', 'danger')
 
         elif action == 'delete':
             cat_to_delete = request.form.get('delete_cat', '').strip()
-            if cat_to_delete in cats:
-                del cats[cat_to_delete]
-                save_categories(cats)
-                flash(f'Deleted "{cat_to_delete}".', 'success')
+            if cat_to_delete:
+                r = pb.get('/api/collections/categories/records', params={
+                    'filter': f'name="{cat_to_delete}"',
+                    'fields': 'id',
+                    'perPage': 1,
+                })
+                items = r.json().get('items', [])
+                if items:
+                    pb.delete(f'/api/collections/categories/records/{items[0]["id"]}')
+                    flash(f'Deleted "{cat_to_delete}".', 'success')
             return redirect(url_for('categories'))
 
+    # Build flat dict {name: [keywords]} for template compatibility
+    cat_records = pb_fetch_categories(pb)
+    cats = {}
+    for c in cat_records:
+        cats[c['name']] = c.get('keywords', []) or []
     return render_template('categories.html', categories=cats)
 
 
 @app.route('/review', methods=['GET', 'POST'])
 @login_required
 def review():
+    cfg = load_config()
     pending = load_pending()
 
     if request.method == 'POST':
-        cats = load_categories()
+        pb = PocketBaseClient(cfg)
         approved_ids = set(request.form.getlist('approve'))
         dismissed_ids = set(request.form.getlist('dismiss'))
         approved_archive = load_approved()
@@ -299,24 +364,25 @@ def review():
                 keyword = request.form.get(f'keyword_{pid}', item['keyword']).strip()
                 category = request.form.get(f'category_{pid}', item['category']).strip() or item['category']
                 if keyword and category:
-                    cats.setdefault(category, [])
-                    if keyword not in cats[category]:
-                        cats[category].append(keyword)
+                    pb_add_keyword(pb, category, keyword)
                 item['approved'] = True
                 approved_archive.append({**item, 'keyword': keyword})
             elif pid in dismissed_ids:
-                item['approved'] = True  # remove from pending without saving rule
+                item['approved'] = True
 
         pending = [p for p in pending if not p.get('approved')]
-        save_categories(cats)
         save_pending(pending)
         save_approved(approved_archive)
         flash('Rules updated.', 'success')
         return redirect(url_for('review'))
 
     approved = load_approved()
-    cats = load_categories()
-    return render_template('review.html', pending=pending, approved=approved, categories=list(cats.keys()))
+    try:
+        pb = PocketBaseClient(cfg)
+        cat_names = pb_category_names(pb)
+    except Exception:
+        cat_names = []
+    return render_template('review.html', pending=pending, approved=approved, categories=cat_names)
 
 
 @app.route('/upload', methods=['GET', 'POST'])
@@ -332,7 +398,7 @@ def upload():
         content = f.read().decode('utf-8-sig')
         transactions = parse_csv(content)
 
-        categorizer = Categorizer(CATEGORIES_FILE)
+        categorizer = Categorizer(cfg)
         categorized, uncategorized = categorizer.categorize(transactions)
         all_tx = categorized + uncategorized
 
@@ -402,7 +468,7 @@ def transactions():
     r = pb.get('/api/collections/transactions/records', params=params)
     data = r.json()
 
-    cats = list(load_categories().keys())
+    cats = pb_category_names(pb)
     return render_template('transactions.html',
         records=data.get('items', []),
         total_pages=data.get('totalPages', 1),

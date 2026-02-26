@@ -28,3 +28,6 @@ class PocketBaseClient:
 
     def patch(self, path, **kwargs):
         return requests.patch(f'{self.base}{path}', headers=self._h(), **kwargs)
+
+    def delete(self, path, **kwargs):
+        return requests.delete(f'{self.base}{path}', headers=self._h(), **kwargs)

@@ -34,7 +34,7 @@ LOG_FILE = 'logs/pipeline.log'
 
 def process_files(config):
     watcher = DriveWatcher(config)
-    categorizer = Categorizer(config.get('categories_file', 'categories.json'))
+    categorizer = Categorizer(config)
     deduplicator = PocketBaseDeduplicator(config)
     uploader = PocketBaseUploader(config)
     learner = PocketBaseLearner(config)
@@ -64,13 +64,11 @@ def process_files(config):
                     uploader.upload(new_categorized)
 
                     if new_uncategorized:
-                        uncat_ids = uploader.upload(new_uncategorized)
-                        pairs = list(zip(uncat_ids, [t['name'] for t in new_uncategorized]))
-                        learner.record_uploaded_uncategorized(pairs)
+                        uploader.upload(new_uncategorized)
                         notifier.notify_uncategorized(new_uncategorized)
                         log.info(f'  Notified about {len(new_uncategorized)} uncategorized')
 
-                    log.info(f'  Uploaded {len(new_tx)} transactions to Notion')
+                    log.info(f'  Uploaded {len(new_tx)} transactions to PocketBase')
 
                 watcher.mark_processed(file_id)
                 log.info(f'  Moved {filename} to processed/')

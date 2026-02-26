@@ -10,7 +10,6 @@ APPROVED_RULES = 'data/approved_rules.json'
 class PocketBaseLearner:
     def __init__(self, config):
         self.client = PocketBaseClient(config)
-        self.categories_file = os.path.abspath(config.get('categories_file', 'categories.json'))
         os.makedirs('data', exist_ok=True)
 
     def _load_json(self, path):
@@ -24,22 +23,20 @@ class PocketBaseLearner:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
     def _load_force_manual_keywords(self):
-        """Load keywords from 'Uncategorized' categories - these merchants should never generate rules."""
+        """Fetch keywords from 'Uncategorized' categories in PocketBase."""
         try:
-            with open(self.categories_file, encoding='utf-8') as f:
-                raw = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
+            r = self.client.get('/api/collections/categories/records', params={
+                'filter': 'name="Uncategorized"',
+                'fields': 'keywords',
+            })
+            data = r.json()
+            keywords = set()
+            for cat in data.get('items', []):
+                for kw in cat.get('keywords', []):
+                    keywords.add(kw.lower())
+            return keywords
+        except Exception:
             return set()
-
-        keywords = set()
-        for section in ('income', 'expense', 'transfer'):
-            for kw in raw.get(section, {}).get('Uncategorized', []):
-                keywords.add(kw.lower())
-        # Also check flat format
-        if 'Uncategorized' in raw and isinstance(raw['Uncategorized'], list):
-            for kw in raw['Uncategorized']:
-                keywords.add(kw.lower())
-        return keywords
 
     def scan_for_recategorized(self):
         """Query PocketBase for originally-uncategorized records that now have a real category.
@@ -74,7 +71,7 @@ class PocketBaseLearner:
                     seen.add((name, category))
                     new_pending.append({
                         'record_id': rec['id'],
-                        'page_id': rec['id'],  # kept for review template compatibility
+                        'page_id': rec['id'],
                         'name': name,
                         'category': category,
                         'transaction_type': tx_type,
