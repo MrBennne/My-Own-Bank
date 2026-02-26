@@ -8,7 +8,25 @@ class Categorizer:
 
     def _load(self):
         with open(self.rules_file, encoding='utf-8') as f:
-            self.rules = json.load(f)
+            raw = json.load(f)
+
+        # Support both the old flat format {"Category": [...keywords]}
+        # and the new typed format {"income": {...}, "expense": {...}, "transfer": {...}}
+        if 'income' in raw or 'expense' in raw or 'transfer' in raw:
+            self._typed = True
+            self.income_rules = raw.get('income', {})
+            self.expense_rules = raw.get('expense', {})
+            self.transfer_rules = raw.get('transfer', {})
+            # Flat union for backward compat
+            self.rules = {}
+            for section in (self.transfer_rules, self.income_rules, self.expense_rules):
+                self.rules.update(section)
+        else:
+            self._typed = False
+            self.rules = raw
+            self.income_rules = {}
+            self.expense_rules = {}
+            self.transfer_rules = {}
 
     def reload(self):
         self._load()
@@ -20,7 +38,7 @@ class Categorizer:
         uncategorized = []
 
         for tx in transactions:
-            category = self._match(tx['name'])
+            category = self._match(tx['name'], tx.get('type', 'Expense'))
             if category:
                 categorized.append({**tx, 'category': category})
             else:
@@ -28,10 +46,27 @@ class Categorizer:
 
         return categorized, uncategorized
 
-    def _match(self, name):
+    def _match(self, name, tx_type='Expense'):
         name_lower = name.lower()
-        for category, keywords in self.rules.items():
+
+        if not self._typed:
+            # Legacy flat matching
+            for category, keywords in self.rules.items():
+                for keyword in keywords:
+                    if keyword.lower() in name_lower:
+                        return category
+            return None
+
+        # Typed matching: transfers first, then type-specific
+        for category, keywords in self.transfer_rules.items():
             for keyword in keywords:
                 if keyword.lower() in name_lower:
                     return category
+
+        type_rules = self.income_rules if tx_type == 'Income' else self.expense_rules
+        for category, keywords in type_rules.items():
+            for keyword in keywords:
+                if keyword.lower() in name_lower:
+                    return category
+
         return None

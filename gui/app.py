@@ -445,6 +445,16 @@ def run_now():
     return render_template('run_result.html', output=output, returncode=result.returncode)
 
 
+@app.route('/api/reset-rules', methods=['POST'])
+def api_reset_rules():
+    """Clear pending_rules.json so the autocategorizer starts fresh."""
+    cleared = False
+    if os.path.exists(PENDING_FILE):
+        os.remove(PENDING_FILE)
+        cleared = True
+    return jsonify({'ok': True, 'cleared': cleared})
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def create_app():
