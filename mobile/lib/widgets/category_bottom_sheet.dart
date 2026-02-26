@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/category.dart';
+import '../models/transaction.dart';
+import '../services/api_service.dart';
 import '../services/category_service.dart';
 import '../theme/app_theme.dart';
 
@@ -34,11 +36,52 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
   String _search = '';
   String? _typeFilter; // null = all
   final _searchController = TextEditingController();
+  final _api = ApiService();
+  Map<String, int> _recentlyUsedFrequency = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentlyUsedCategories();
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadRecentlyUsedCategories() async {
+    try {
+      final now = DateTime.now();
+      final threeMonthsAgo = now.subtract(const Duration(days: 90));
+      final dateFilter = 'created >= "${threeMonthsAgo.toIso8601String()}"';
+
+      final result = await _api.fetchTransactions(
+        perPage: 500,
+        dateFilter: dateFilter,
+      );
+
+      final frequency = <String, int>{};
+      for (final tx in result.items) {
+        final category = tx.category ?? 'Uncategorized';
+        if (category.isNotEmpty) {
+          frequency[category] = (frequency[category] ?? 0) + 1;
+        }
+      }
+
+      // Sort by frequency descending, take top 8
+      final sorted = frequency.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+
+      if (mounted) {
+        setState(() {
+          _recentlyUsedFrequency = Map.fromEntries(sorted.take(8));
+        });
+      }
+    } catch (e) {
+      print('Failed to load recently used categories: $e');
+    }
   }
 
   List<CategoryGroup> get _groups {
@@ -314,9 +357,93 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
                 : ListView.builder(
                     shrinkWrap: true,
                     padding: const EdgeInsets.only(bottom: 16),
-                    itemCount: groups.length + 1,
+                    itemCount: groups.length + (_recentlyUsedFrequency.isNotEmpty ? 2 : 1),
                     itemBuilder: (ctx, i) {
-                      if (i == 0) {
+                      // Recently used section (if available)
+                      if (_recentlyUsedFrequency.isNotEmpty && i == 0) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                              child: Text(
+                                'FREQUENTLY USED',
+                                style: const TextStyle(
+                                  color: AppTheme.onSurfaceMuted,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: _recentlyUsedFrequency.entries.map((entry) {
+                                final color = CategoryColors.forCategory(entry.key);
+                                return GestureDetector(
+                                  onTap: () {
+                                    final cat = CategoryService.instance.findByName(entry.key);
+                                    if (cat != null) {
+                                      _select(cat);
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: color.withAlpha(20),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: color.withAlpha(60),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: BoxDecoration(
+                                            color: color.withAlpha(30),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              entry.key.isNotEmpty ? entry.key[0].toUpperCase() : '?',
+                                              style: TextStyle(
+                                                color: color,
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          '${entry.key} (${entry.value})',
+                                          style: TextStyle(
+                                            color: AppTheme.onSurface,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        );
+                      }
+
+                      // New category button + regular groups
+                      final actualIndex = _recentlyUsedFrequency.isNotEmpty ? i - 1 : i;
+                      if (actualIndex == 0) {
                         return ListTile(
                           dense: true,
                           onTap: _showCreateDialog,
@@ -345,7 +472,7 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
                           ),
                         );
                       }
-                      final group = groups[i - 1];
+                      final group = groups[actualIndex - 1];
                       return _GroupSection(
                         group: group,
                         currentCategory: widget.currentCategory,
