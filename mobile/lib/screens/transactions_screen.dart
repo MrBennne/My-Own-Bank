@@ -75,6 +75,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _loadCategories();
+    // Listen to CategoryService for updates (e.g., when categories are added/removed)
+    CategoryService.instance.addListener(_onCategoryServiceChanged);
 
     final settings = SettingsService.instance;
     _searchQuery = settings.txSearchQuery;
@@ -89,8 +91,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     _fetchTransactions(reset: true);
   }
 
+  void _onCategoryServiceChanged() {
+    _loadCategories();
+  }
+
   @override
   void dispose() {
+    CategoryService.instance.removeListener(_onCategoryServiceChanged);
     _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
