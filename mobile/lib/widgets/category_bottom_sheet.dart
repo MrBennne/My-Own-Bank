@@ -89,6 +89,107 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
     );
   }
 
+  Future<void> _showCreateDialog() async {
+    final nameController = TextEditingController();
+    String selectedType = 'expense';
+    String? selectedColor;
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setLocal) {
+          return AlertDialog(
+            backgroundColor: AppTheme.surfaceVariant,
+            title: const Text('New Category'),
+            content: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: nameController,
+                      decoration:
+                          const InputDecoration(labelText: 'Name'),
+                      autofocus: true,
+                      validator: (v) {
+                        if ((v?.trim() ?? '').isEmpty) {
+                          return 'Name is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: selectedType,
+                      dropdownColor: AppTheme.surfaceVariant,
+                      decoration:
+                          const InputDecoration(labelText: 'Type'),
+                      items: const [
+                        DropdownMenuItem(
+                            value: 'expense', child: Text('Expense')),
+                        DropdownMenuItem(
+                            value: 'income', child: Text('Income')),
+                        DropdownMenuItem(
+                            value: 'transfer',
+                            child: Text('Transfer')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setLocal(() => selectedType = v);
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Colour (optional)',
+                        style: TextStyle(
+                            color: AppTheme.onSurfaceMuted,
+                            fontSize: 13)),
+                    const SizedBox(height: 10),
+                    _ColorPickerInline(
+                      selected: selectedColor,
+                      onSelect: (hex) =>
+                          setLocal(() => selectedColor = hex),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (!formKey.currentState!.validate()) return;
+                  final name = nameController.text.trim();
+                  try {
+                    final created =
+                        await CategoryService.instance.createCategory(
+                      name,
+                      selectedType,
+                      color: selectedColor,
+                    );
+                    if (ctx.mounted) Navigator.pop(ctx);
+                    _select(created);
+                  } catch (e) {
+                    if (ctx.mounted) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Create'),
+              ),
+            ],
+          );
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final groups = _groups;
@@ -200,9 +301,38 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
                 : ListView.builder(
                     shrinkWrap: true,
                     padding: const EdgeInsets.only(bottom: 16),
-                    itemCount: groups.length,
+                    itemCount: groups.length + 1,
                     itemBuilder: (ctx, i) {
-                      final group = groups[i];
+                      if (i == 0) {
+                        return ListTile(
+                          dense: true,
+                          onTap: _showCreateDialog,
+                          leading: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withAlpha(30),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.add_rounded,
+                                size: 16,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ),
+                          title: const Text(
+                            'New Category',
+                            style: TextStyle(
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        );
+                      }
+                      final group = groups[i - 1];
                       return _GroupSection(
                         group: group,
                         currentCategory: widget.currentCategory,
@@ -327,6 +457,63 @@ class _GroupSection extends StatelessWidget {
           );
         }),
       ],
+    );
+  }
+}
+
+// ── Compact color picker for the creation dialog ────────────────────────────
+
+const List<Color> _presetColors = [
+  Color(0xFF0d6efd), Color(0xFF6366f1), Color(0xFF8b5cf6), Color(0xFFec4899),
+  Color(0xFFf43f5e), Color(0xFFef4444), Color(0xFFf97316), Color(0xFFf59e0b),
+  Color(0xFFfbbf24), Color(0xFFa3e635), Color(0xFF22c55e), Color(0xFF10b981),
+  Color(0xFF14b8a6), Color(0xFF06b6d4), Color(0xFF0ea5e9), Color(0xFF3b82f6),
+  Color(0xFF6c757d), Color(0xFF475569), Color(0xFF1e293b), Color(0xFFffffff),
+  Color(0xFFff6b6b), Color(0xFF4ecdc4), Color(0xFFa8edea), Color(0xFFff9ff3),
+];
+
+class _ColorPickerInline extends StatelessWidget {
+  final String? selected;
+  final ValueChanged<String> onSelect;
+
+  const _ColorPickerInline({
+    required this.selected,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: _presetColors.map((color) {
+        final hex =
+            '#${color.toARGB32().toRadixString(16).substring(2)}';
+        final isSelected = selected != null &&
+            selected!.toLowerCase() == hex.toLowerCase();
+        return GestureDetector(
+          onTap: () => onSelect(hex),
+          child: Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: isSelected
+                  ? Border.all(color: Colors.white, width: 2)
+                  : Border.all(color: Colors.transparent, width: 2),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                          color: color.withAlpha(120),
+                          blurRadius: 4,
+                          spreadRadius: 1)
+                    ]
+                  : null,
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
