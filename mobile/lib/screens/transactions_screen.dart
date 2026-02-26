@@ -84,6 +84,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     _sortAsc = settings.txSortAsc;
     _searchController.text = _searchQuery;
 
+    // Load frequency from past 3 months (unfiltered) for dropdown, then fetch paginated view
+    _loadCategoryFrequencyFromPast3Months();
     _fetchTransactions(reset: true);
   }
 
@@ -106,6 +108,41 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   void _loadCategories() {
     final names = CategoryService.instance.allCategoryNames;
     setState(() => _categories = ['', ...names]);
+  }
+
+  /// Loads category frequency from past 3 months (unfiltered) to populate the dropdown.
+  /// This gives users a realistic view of their top spending categories across time.
+  Future<void> _loadCategoryFrequencyFromPast3Months() async {
+    try {
+      final now = DateTime.now();
+      final from = DateTime(now.year, now.month - 2, 1); // First day of 3 months ago
+      final fromStr =
+          '${from.year}-${from.month.toString().padLeft(2, '0')}-${from.day.toString().padLeft(2, '0')}';
+      final toStr =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final dateFilter = 'date>="$fromStr"&&date<="$toStr"';
+
+      // Fetch all transactions in the past 3 months without other filters
+      final result = await _api.fetchTransactions(
+        page: 1,
+        perPage: 500, // Large batch to capture frequency
+        search: null,
+        category: null,
+        type: null,
+        dateFilter: dateFilter,
+      );
+
+      final freq = <String, int>{};
+      for (final tx in result.items) {
+        freq[tx.category] = (freq[tx.category] ?? 0) + 1;
+      }
+
+      if (mounted) {
+        setState(() => _categoryFrequency = freq);
+      }
+    } catch (_) {
+      // Silently fail — frequency is a nice-to-have, not critical
+    }
   }
 
   String get _sortParam {
