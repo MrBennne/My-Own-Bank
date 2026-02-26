@@ -76,12 +76,14 @@ class KpiData {
   final double totalExpenses;
   final double netSavings;
   final double savingsRate;
+  final int transactionCount;
 
   const KpiData({
     required this.totalIncome,
     required this.totalExpenses,
     required this.netSavings,
     required this.savingsRate,
+    required this.transactionCount,
   });
 }
 
@@ -236,6 +238,7 @@ class DashboardService {
         totalExpenses: totalExpenses,
         netSavings: netSavings,
         savingsRate: savingsRate,
+        transactionCount: transactions.length,
       ),
       topCategories: top10,
       monthlyBars: sortedMonths,

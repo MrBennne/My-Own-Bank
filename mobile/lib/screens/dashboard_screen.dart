@@ -226,7 +226,7 @@ class _KpiStrip extends StatelessWidget {
       ),
       _KpiMini(
         label: 'Transactions',
-        value: '—',
+        value: '${kpi.transactionCount}',
         icon: Icons.receipt_long_rounded,
         color: AppTheme.onSurfaceMuted,
       ),
