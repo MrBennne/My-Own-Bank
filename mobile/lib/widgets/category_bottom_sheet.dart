@@ -93,6 +93,7 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
     final nameController = TextEditingController();
     String selectedType = 'expense';
     String? selectedColor;
+    bool isCreating = false;
     final formKey = GlobalKey<FormState>();
 
     await showDialog<void>(
@@ -115,8 +116,10 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
                           const InputDecoration(labelText: 'Name'),
                       autofocus: true,
                       validator: (v) {
-                        if ((v?.trim() ?? '').isEmpty) {
-                          return 'Name is required';
+                        final name = v?.trim() ?? '';
+                        if (name.isEmpty) return 'Name is required';
+                        if (CategoryService.instance.findByName(name) != null) {
+                          return 'Category already exists';
                         }
                         return null;
                       },
@@ -161,27 +164,37 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
-                onPressed: () async {
-                  if (!formKey.currentState!.validate()) return;
-                  final name = nameController.text.trim();
-                  try {
-                    final created =
-                        await CategoryService.instance.createCategory(
-                      name,
-                      selectedType,
-                      color: selectedColor,
-                    );
-                    if (ctx.mounted) Navigator.pop(ctx);
-                    _select(created);
-                  } catch (e) {
-                    if (ctx.mounted) {
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        SnackBar(content: Text('Error: $e')),
-                      );
-                    }
-                  }
-                },
-                child: const Text('Create'),
+                onPressed: isCreating
+                    ? null
+                    : () async {
+                        if (!formKey.currentState!.validate()) return;
+                        setLocal(() => isCreating = true);
+                        final name = nameController.text.trim();
+                        try {
+                          final created =
+                              await CategoryService.instance.createCategory(
+                            name,
+                            selectedType,
+                            color: selectedColor,
+                          );
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          if (mounted) _select(created);
+                        } catch (e) {
+                          setLocal(() => isCreating = false);
+                          if (ctx.mounted) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
+                        }
+                      },
+                child: isCreating
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Create'),
               ),
             ],
           );
