@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction.dart';
 import '../services/api_service.dart';
+import '../services/dashboard_cache_service.dart';
 import '../services/dashboard_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/hero_summary_card.dart';
@@ -33,17 +35,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _load();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool forceRefresh = false}) async {
     setState(() {
       _loading = true;
       _error = null;
     });
 
     try {
+      final filterKey = _filter.dateFilter ?? 'all';
+      final cache = DashboardCacheService.instance;
+
+      // Try cache first (unless force refresh)
+      if (!forceRefresh) {
+        final cached = cache.load(filterKey);
+        if (cached != null) {
+          if (mounted) {
+            setState(() {
+              _data = cached;
+              _loading = false;
+            });
+          }
+          return;
+        }
+      }
+
+      // Cache miss or force refresh -- fetch from API
       final transactions = await _api.fetchAllTransactions(
         dateFilter: _filter.dateFilter,
       );
       final data = _dashboardService.aggregate(transactions);
+
+      // Save to cache
+      unawaited(cache.save(filterKey, data));
+
       if (mounted) {
         setState(() {
           _transactions = transactions;
@@ -75,7 +99,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Refresh',
-            onPressed: _loading ? null : _load,
+            onPressed: _loading ? null : () => _load(forceRefresh: true),
           ),
         ],
       ),
@@ -155,7 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final data = _data!;
 
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: () => _load(forceRefresh: true),
       child: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: [

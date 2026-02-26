@@ -85,6 +85,22 @@ class KpiData {
     required this.savingsRate,
     required this.transactionCount,
   });
+
+  Map<String, dynamic> toJson() => {
+    'totalIncome': totalIncome,
+    'totalExpenses': totalExpenses,
+    'netSavings': netSavings,
+    'savingsRate': savingsRate,
+    'transactionCount': transactionCount,
+  };
+
+  factory KpiData.fromJson(Map<String, dynamic> json) => KpiData(
+    totalIncome: (json['totalIncome'] as num).toDouble(),
+    totalExpenses: (json['totalExpenses'] as num).toDouble(),
+    netSavings: (json['netSavings'] as num).toDouble(),
+    savingsRate: (json['savingsRate'] as num).toDouble(),
+    transactionCount: json['transactionCount'] as int,
+  );
 }
 
 class CategoryAmount {
@@ -92,6 +108,13 @@ class CategoryAmount {
   final double amount;
 
   const CategoryAmount({required this.category, required this.amount});
+
+  Map<String, dynamic> toJson() => {'category': category, 'amount': amount};
+
+  factory CategoryAmount.fromJson(Map<String, dynamic> json) => CategoryAmount(
+    category: json['category'] as String,
+    amount: (json['amount'] as num).toDouble(),
+  );
 }
 
 class MonthlyBar {
@@ -105,6 +128,14 @@ class MonthlyBar {
     required this.income,
     required this.expenses,
   });
+
+  Map<String, dynamic> toJson() => {'label': label, 'income': income, 'expenses': expenses};
+
+  factory MonthlyBar.fromJson(Map<String, dynamic> json) => MonthlyBar(
+    label: json['label'] as String,
+    income: (json['income'] as num).toDouble(),
+    expenses: (json['expenses'] as num).toDouble(),
+  );
 }
 
 class DashboardData {
@@ -117,6 +148,22 @@ class DashboardData {
     required this.topCategories,
     required this.monthlyBars,
   });
+
+  Map<String, dynamic> toJson() => {
+    'kpi': kpi.toJson(),
+    'topCategories': topCategories.map((c) => c.toJson()).toList(),
+    'monthlyBars': monthlyBars.map((b) => b.toJson()).toList(),
+  };
+
+  factory DashboardData.fromJson(Map<String, dynamic> json) => DashboardData(
+    kpi: KpiData.fromJson(json['kpi'] as Map<String, dynamic>),
+    topCategories: (json['topCategories'] as List)
+        .map((e) => CategoryAmount.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    monthlyBars: (json['monthlyBars'] as List)
+        .map((e) => MonthlyBar.fromJson(e as Map<String, dynamic>))
+        .toList(),
+  );
 }
 
 // ---------------------------------------------------------------------------
