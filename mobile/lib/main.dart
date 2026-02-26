@@ -56,7 +56,9 @@ class _AppRouterState extends State<AppRouter> {
     if (valid) {
       try {
         await CategoryService.instance.load();
-      } catch (_) {}
+      } catch (e) {
+        print('CategoryService.load() failed: $e');
+      }
     }
     if (mounted) {
       setState(() {

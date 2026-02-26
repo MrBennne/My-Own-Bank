@@ -74,7 +74,20 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _loadCategories();
+
+    // Wait for CategoryService to be loaded, then load categories
+    final catService = CategoryService.instance;
+    if (catService.loaded) {
+      _loadCategories();
+    } else {
+      catService.load().then((_) {
+        if (mounted) _loadCategories();
+      }).catchError((e) {
+        print('Failed to load categories: $e');
+        if (mounted) _loadCategories(); // Load anyway, will only have Uncategorized
+      });
+    }
+
     // Listen to CategoryService for updates (e.g., when categories are added/removed)
     CategoryService.instance.addListener(_onCategoryServiceChanged);
 
