@@ -168,52 +168,55 @@ class CategoryService extends ChangeNotifier {
   // ── Categorization engine ─────────────────────────────────────────────────
 
   /// Returns (category, subcategory, type) for a transaction name.
-  /// Checks transfer categories first, then type-specific.
+  /// Matches keywords longest-first (globally across all categories) to avoid false positives.
+  /// For example, "Lønoverførsel" matches the keyword "Lønoverførsel" (9 chars) before "overførsel" (10 chars).
   ({String category, String subcategory, String type}) categorize(
       String txName, String txType) {
     final lower = txName.toLowerCase();
 
-    // Build parent lookup
+    // Build parent lookup and collect all keywords with their categories
     final catMap = {for (final c in _categories) c.id: c};
+    final allMatches = <(String keyword, Category category, String effectiveType)>[];
 
-    // Check transfer categories first
     for (final cat in _categories) {
       final effectiveType = cat.isSubcategory
           ? catMap[cat.parentId]?.type ?? cat.type
           : cat.type;
-      if (effectiveType != 'transfer') continue;
       for (final kw in cat.keywords) {
-        if (lower.contains(kw.toLowerCase())) {
-          if (cat.isSubcategory) {
-            return (
-              category: cat.parentName ?? cat.name,
-              subcategory: cat.name,
-              type: 'Transfer'
-            );
-          }
-          return (category: cat.name, subcategory: '', type: 'Transfer');
-        }
+        allMatches.add((kw, cat, effectiveType));
       }
     }
 
-    // Check type-specific categories
-    final matchType = txType == 'Income' ? 'income' : 'expense';
-    for (final cat in _categories) {
-      final effectiveType = cat.isSubcategory
-          ? catMap[cat.parentId]?.type ?? cat.type
-          : cat.type;
-      if (effectiveType != matchType) continue;
-      for (final kw in cat.keywords) {
-        if (lower.contains(kw.toLowerCase())) {
-          if (cat.isSubcategory) {
-            return (
-              category: cat.parentName ?? cat.name,
-              subcategory: cat.name,
-              type: txType
-            );
-          }
-          return (category: cat.name, subcategory: '', type: txType);
+    // Sort by keyword length descending (longest matches first)
+    allMatches.sort((a, b) => b.$1.length.compareTo(a.$1.length));
+
+    // Check in longest-first order
+    for (final (kw, cat, effectiveType) in allMatches) {
+      if (!lower.contains(kw.toLowerCase())) continue;
+
+      // Transfer matches always win
+      if (effectiveType == 'transfer') {
+        if (cat.isSubcategory) {
+          return (
+            category: cat.parentName ?? cat.name,
+            subcategory: cat.name,
+            type: 'Transfer'
+          );
         }
+        return (category: cat.name, subcategory: '', type: 'Transfer');
+      }
+
+      // Type-specific match
+      final matchType = txType == 'Income' ? 'income' : 'expense';
+      if (effectiveType == matchType) {
+        if (cat.isSubcategory) {
+          return (
+            category: cat.parentName ?? cat.name,
+            subcategory: cat.name,
+            type: txType
+          );
+        }
+        return (category: cat.name, subcategory: '', type: txType);
       }
     }
 
