@@ -160,8 +160,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       if (mounted) {
         setState(() => _categoryFrequency = freq);
       }
-    } catch (_) {
-      // Silently fail — frequency is a nice-to-have, not critical
+      print('Loaded frequency for ${freq.length} categories from ${result.items.length} transactions');
+    } catch (e) {
+      print('Failed to load category frequency: $e');
     }
   }
 
