@@ -62,7 +62,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       return PaginatedTransactions.fromJson(
-        jsonDecode(response.body) as Map<String, dynamic>,
+        jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>,
       );
     } else if (response.statusCode == 401) {
       await _auth.login();
@@ -71,7 +71,7 @@ class ApiService {
           .timeout(const Duration(seconds: 20));
       if (retryResponse.statusCode == 200) {
         return PaginatedTransactions.fromJson(
-          jsonDecode(retryResponse.body) as Map<String, dynamic>,
+          jsonDecode(utf8.decode(retryResponse.bodyBytes)) as Map<String, dynamic>,
         );
       }
     }

@@ -29,7 +29,7 @@ class AuthService {
         .timeout(const Duration(seconds: 15));
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       final token = data['token'] as String;
       await _storage.write(key: _kTokenKey, value: token);
       return token;
