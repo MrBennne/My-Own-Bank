@@ -140,14 +140,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         setState(() {
           if (reset) {
             _transactions = result.items;
-            final freq = <String, int>{};
-            for (final tx in result.items) {
-              freq[tx.category] = (freq[tx.category] ?? 0) + 1;
-            }
-            _categoryFrequency = freq;
           } else {
             _transactions.addAll(result.items);
           }
+          final freq = <String, int>{};
+          for (final tx in _transactions) {
+            freq[tx.category] = (freq[tx.category] ?? 0) + 1;
+          }
+          _categoryFrequency = freq;
           _totalPages = result.totalPages;
           _totalItems = result.totalItems;
           _page = result.page + 1;
@@ -316,7 +316,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       final count = _categoryFrequency[c];
                       final label = count != null ? '$c ($count)' : c;
                       return DropdownMenuItem(
-                          value: c, child: Text(label));
+                        value: c,
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
                     }),
                   ],
                   onChanged: (v) {
