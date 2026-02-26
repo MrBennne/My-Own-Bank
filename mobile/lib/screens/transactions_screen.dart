@@ -51,6 +51,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   List<Transaction> _transactions = [];
   List<String> _categories = [''];
+  Map<String, int> _categoryFrequency = {};
   bool _loading = false;
   bool _loadingMore = false;
   String? _error;
@@ -139,6 +140,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         setState(() {
           if (reset) {
             _transactions = result.items;
+            final freq = <String, int>{};
+            for (final tx in result.items) {
+              freq[tx.category] = (freq[tx.category] ?? 0) + 1;
+            }
+            _categoryFrequency = freq;
           } else {
             _transactions.addAll(result.items);
           }
@@ -301,12 +307,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   items: [
                     const DropdownMenuItem(
                         value: 'All', child: Text('All')),
-                    ..._categories
-                        .where((c) => c.isNotEmpty)
-                        .map(
-                          (c) => DropdownMenuItem(
-                              value: c, child: Text(c)),
-                        ),
+                    ...(_categories
+                            .where((c) => c.isNotEmpty)
+                            .toList()
+                          ..sort((a, b) => (_categoryFrequency[b] ?? 0)
+                              .compareTo(_categoryFrequency[a] ?? 0)))
+                        .map((c) {
+                      final count = _categoryFrequency[c];
+                      final label = count != null ? '$c ($count)' : c;
+                      return DropdownMenuItem(
+                          value: c, child: Text(label));
+                    }),
                   ],
                   onChanged: (v) {
                     setState(() =>
