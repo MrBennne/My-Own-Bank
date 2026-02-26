@@ -53,20 +53,20 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
 
   Future<void> _loadRecentlyUsedCategories() async {
     try {
-      final now = DateTime.now();
-      final threeMonthsAgo = now.subtract(const Duration(days: 90));
-      final dateFilter = 'created >= "${threeMonthsAgo.toIso8601String()}"';
-
+      // Load recent transactions (up to 300) sorted by date descending
       final result = await _api.fetchTransactions(
-        perPage: 500,
-        dateFilter: dateFilter,
+        perPage: 300,
+        sort: '-date', // Most recent first
       );
 
       final frequency = <String, int>{};
+
+      // Build frequency from transactions, excluding empty/Uncategorized
       for (final tx in result.items) {
-        final category = tx.category ?? 'Uncategorized';
-        if (category.isNotEmpty) {
-          frequency[category] = (frequency[category] ?? 0) + 1;
+        if (tx.category != null &&
+            tx.category!.isNotEmpty &&
+            tx.category != 'Uncategorized') {
+          frequency[tx.category!] = (frequency[tx.category!] ?? 0) + 1;
         }
       }
 
@@ -78,6 +78,8 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
         setState(() {
           _recentlyUsedFrequency = Map.fromEntries(sorted.take(8));
         });
+        print(
+            'Loaded ${_recentlyUsedFrequency.length} frequently used categories');
       }
     } catch (e) {
       print('Failed to load recently used categories: $e');
@@ -155,8 +157,7 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
                   children: [
                     TextFormField(
                       controller: nameController,
-                      decoration:
-                          const InputDecoration(labelText: 'Name'),
+                      decoration: const InputDecoration(labelText: 'Name'),
                       autofocus: true,
                       validator: (v) {
                         final name = v?.trim() ?? '';
@@ -171,16 +172,14 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
                     DropdownButtonFormField<String>(
                       value: selectedType,
                       dropdownColor: AppTheme.surfaceVariant,
-                      decoration:
-                          const InputDecoration(labelText: 'Type'),
+                      decoration: const InputDecoration(labelText: 'Type'),
                       items: const [
                         DropdownMenuItem(
                             value: 'expense', child: Text('Expense')),
                         DropdownMenuItem(
                             value: 'income', child: Text('Income')),
                         DropdownMenuItem(
-                            value: 'transfer',
-                            child: Text('Transfer')),
+                            value: 'transfer', child: Text('Transfer')),
                       ],
                       onChanged: (v) {
                         if (v != null) setLocal(() => selectedType = v);
@@ -189,13 +188,11 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
                     const SizedBox(height: 20),
                     const Text('Colour (optional)',
                         style: TextStyle(
-                            color: AppTheme.onSurfaceMuted,
-                            fontSize: 13)),
+                            color: AppTheme.onSurfaceMuted, fontSize: 13)),
                     const SizedBox(height: 10),
                     _ColorPickerInline(
                       selected: selectedColor,
-                      onSelect: (hex) =>
-                          setLocal(() => selectedColor = hex),
+                      onSelect: (hex) => setLocal(() => selectedColor = hex),
                     ),
                   ],
                 ),
@@ -357,7 +354,8 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
                 : ListView.builder(
                     shrinkWrap: true,
                     padding: const EdgeInsets.only(bottom: 16),
-                    itemCount: groups.length + (_recentlyUsedFrequency.isNotEmpty ? 2 : 1),
+                    itemCount: groups.length +
+                        (_recentlyUsedFrequency.isNotEmpty ? 2 : 1),
                     itemBuilder: (ctx, i) {
                       // Recently used section (if available)
                       if (_recentlyUsedFrequency.isNotEmpty && i == 0) {
@@ -377,63 +375,71 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
                               child: Wrap(
                                 spacing: 8,
                                 runSpacing: 8,
-                                children: _recentlyUsedFrequency.entries.map((entry) {
-                                final color = CategoryColors.forCategory(entry.key);
-                                return GestureDetector(
-                                  onTap: () {
-                                    final cat = CategoryService.instance.findByName(entry.key);
-                                    if (cat != null) {
-                                      _select(cat);
-                                    }
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: color.withAlpha(20),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: color.withAlpha(60),
+                                children:
+                                    _recentlyUsedFrequency.entries.map((entry) {
+                                  final color =
+                                      CategoryColors.forCategory(entry.key);
+                                  return GestureDetector(
+                                    onTap: () {
+                                      final cat = CategoryService.instance
+                                          .findByName(entry.key);
+                                      if (cat != null) {
+                                        _select(cat);
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: color.withAlpha(20),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: color.withAlpha(60),
+                                        ),
                                       ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 20,
-                                          height: 20,
-                                          decoration: BoxDecoration(
-                                            color: color.withAlpha(30),
-                                            borderRadius: BorderRadius.circular(6),
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              entry.key.isNotEmpty ? entry.key[0].toUpperCase() : '?',
-                                              style: TextStyle(
-                                                color: color,
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 10,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 20,
+                                            height: 20,
+                                            decoration: BoxDecoration(
+                                              color: color.withAlpha(30),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                entry.key.isNotEmpty
+                                                    ? entry.key[0].toUpperCase()
+                                                    : '?',
+                                                style: TextStyle(
+                                                  color: color,
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 10,
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          '${entry.key} (${entry.value})',
-                                          style: TextStyle(
-                                            color: AppTheme.onSurface,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            '${entry.key} (${entry.value})',
+                                            style: TextStyle(
+                                              color: AppTheme.onSurface,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }).toList(),
+                                  );
+                                }).toList(),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -442,7 +448,8 @@ class _CategoryBottomSheetState extends State<CategoryBottomSheet> {
                       }
 
                       // New category button + regular groups
-                      final actualIndex = _recentlyUsedFrequency.isNotEmpty ? i - 1 : i;
+                      final actualIndex =
+                          _recentlyUsedFrequency.isNotEmpty ? i - 1 : i;
                       if (actualIndex == 0) {
                         return ListTile(
                           dense: true,
@@ -604,12 +611,30 @@ class _GroupSection extends StatelessWidget {
 // ── Compact color picker for the creation dialog ────────────────────────────
 
 const List<Color> _presetColors = [
-  Color(0xFF0d6efd), Color(0xFF6366f1), Color(0xFF8b5cf6), Color(0xFFec4899),
-  Color(0xFFf43f5e), Color(0xFFef4444), Color(0xFFf97316), Color(0xFFf59e0b),
-  Color(0xFFfbbf24), Color(0xFFa3e635), Color(0xFF22c55e), Color(0xFF10b981),
-  Color(0xFF14b8a6), Color(0xFF06b6d4), Color(0xFF0ea5e9), Color(0xFF3b82f6),
-  Color(0xFF6c757d), Color(0xFF475569), Color(0xFF1e293b), Color(0xFFffffff),
-  Color(0xFFff6b6b), Color(0xFF4ecdc4), Color(0xFFa8edea), Color(0xFFff9ff3),
+  Color(0xFF0d6efd),
+  Color(0xFF6366f1),
+  Color(0xFF8b5cf6),
+  Color(0xFFec4899),
+  Color(0xFFf43f5e),
+  Color(0xFFef4444),
+  Color(0xFFf97316),
+  Color(0xFFf59e0b),
+  Color(0xFFfbbf24),
+  Color(0xFFa3e635),
+  Color(0xFF22c55e),
+  Color(0xFF10b981),
+  Color(0xFF14b8a6),
+  Color(0xFF06b6d4),
+  Color(0xFF0ea5e9),
+  Color(0xFF3b82f6),
+  Color(0xFF6c757d),
+  Color(0xFF475569),
+  Color(0xFF1e293b),
+  Color(0xFFffffff),
+  Color(0xFFff6b6b),
+  Color(0xFF4ecdc4),
+  Color(0xFFa8edea),
+  Color(0xFFff9ff3),
 ];
 
 class _ColorPickerInline extends StatelessWidget {
@@ -627,10 +652,9 @@ class _ColorPickerInline extends StatelessWidget {
       spacing: 6,
       runSpacing: 6,
       children: _presetColors.map((color) {
-        final hex =
-            '#${color.toARGB32().toRadixString(16).substring(2)}';
-        final isSelected = selected != null &&
-            selected!.toLowerCase() == hex.toLowerCase();
+        final hex = '#${color.toARGB32().toRadixString(16).substring(2)}';
+        final isSelected =
+            selected != null && selected!.toLowerCase() == hex.toLowerCase();
         return GestureDetector(
           onTap: () => onSelect(hex),
           child: Container(
