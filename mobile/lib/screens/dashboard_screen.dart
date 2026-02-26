@@ -42,7 +42,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     try {
-      final filterKey = _filter.dateFilter ?? 'all';
+      final filterKey = DashboardCacheService.sanitiseKey(
+          _filter.dateFilter ?? 'all');
       final cache = DashboardCacheService.instance;
 
       // Try cache first (unless force refresh)
@@ -161,7 +162,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
-    if (_data == null || _transactions.isEmpty) {
+    if (_data == null || _data!.kpi.transactionCount == 0) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

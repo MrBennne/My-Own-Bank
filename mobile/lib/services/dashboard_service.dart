@@ -99,7 +99,7 @@ class KpiData {
     totalExpenses: (json['totalExpenses'] as num).toDouble(),
     netSavings: (json['netSavings'] as num).toDouble(),
     savingsRate: (json['savingsRate'] as num).toDouble(),
-    transactionCount: json['transactionCount'] as int,
+    transactionCount: (json['transactionCount'] as num).toInt(),
   );
 }
 
