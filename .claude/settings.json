@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "(Edit|Write|MultiEdit)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'FILE=$(echo $TOOL_INPUT | grep -oP \"file_path\\\":\\s*\\\"\\K[^\\\"]+\"); if [[ \"$FILE\" == *.dart ]]; then cd mobile && dart format \"$FILE\" 2>/dev/null; fi'"
+          }
+        ]
+      }
+    ]
+  }
+}
