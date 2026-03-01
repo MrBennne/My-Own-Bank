@@ -71,7 +71,8 @@ class ApiService {
           .timeout(const Duration(seconds: 20));
       if (retryResponse.statusCode == 200) {
         return PaginatedTransactions.fromJson(
-          jsonDecode(utf8.decode(retryResponse.bodyBytes)) as Map<String, dynamic>,
+          jsonDecode(utf8.decode(retryResponse.bodyBytes))
+              as Map<String, dynamic>,
         );
       }
     }
@@ -157,7 +158,8 @@ class ApiService {
           .get(uri, headers: await _authHeaders())
           .timeout(const Duration(seconds: 20));
       if (resp.statusCode != 200) break;
-      final data = jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+      final data =
+          jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
       all.addAll(PaginatedTransactions.fromJson(data).items);
       totalPages = (data['totalPages'] as num?)?.toInt() ?? 1;
       page++;
@@ -167,8 +169,8 @@ class ApiService {
 
   /// Marks a transaction as reviewed by clearing the originally_uncategorized flag.
   Future<void> markReviewed(String id) async {
-    final uri = Uri.parse(
-        '$_kBaseUrl/api/collections/transactions/records/$id');
+    final uri =
+        Uri.parse('$_kBaseUrl/api/collections/transactions/records/$id');
     await http
         .patch(uri,
             headers: await _authHeaders(),
@@ -197,9 +199,9 @@ class ApiService {
 
   Future<void> resetAutoCategorizor() async {
     final uri = Uri.parse('$_kFlaskUrl/api/reset-rules');
-    final response = await http
-        .post(uri, headers: {'Content-Type': 'application/json'})
-        .timeout(const Duration(seconds: 10));
+    final response = await http.post(uri, headers: {
+      'Content-Type': 'application/json'
+    }).timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) {
       throw Exception('Reset failed (${response.statusCode})');
     }

@@ -26,20 +26,37 @@ String _typeLabel(String type) {
 }
 
 const List<Color> _presetColors = [
-  Color(0xFF0d6efd), Color(0xFF6366f1), Color(0xFF8b5cf6), Color(0xFFec4899),
-  Color(0xFFf43f5e), Color(0xFFef4444), Color(0xFFf97316), Color(0xFFf59e0b),
-  Color(0xFFfbbf24), Color(0xFFa3e635), Color(0xFF22c55e), Color(0xFF10b981),
-  Color(0xFF14b8a6), Color(0xFF06b6d4), Color(0xFF0ea5e9), Color(0xFF3b82f6),
-  Color(0xFF6c757d), Color(0xFF475569), Color(0xFF1e293b), Color(0xFFffffff),
-  Color(0xFFff6b6b), Color(0xFF4ecdc4), Color(0xFFa8edea), Color(0xFFff9ff3),
+  Color(0xFF0d6efd),
+  Color(0xFF6366f1),
+  Color(0xFF8b5cf6),
+  Color(0xFFec4899),
+  Color(0xFFf43f5e),
+  Color(0xFFef4444),
+  Color(0xFFf97316),
+  Color(0xFFf59e0b),
+  Color(0xFFfbbf24),
+  Color(0xFFa3e635),
+  Color(0xFF22c55e),
+  Color(0xFF10b981),
+  Color(0xFF14b8a6),
+  Color(0xFF06b6d4),
+  Color(0xFF0ea5e9),
+  Color(0xFF3b82f6),
+  Color(0xFF6c757d),
+  Color(0xFF475569),
+  Color(0xFF1e293b),
+  Color(0xFFffffff),
+  Color(0xFFff6b6b),
+  Color(0xFF4ecdc4),
+  Color(0xFFa8edea),
+  Color(0xFFff9ff3),
 ];
 
 class CategorySettingsScreen extends StatefulWidget {
   const CategorySettingsScreen({super.key});
 
   @override
-  State<CategorySettingsScreen> createState() =>
-      _CategorySettingsScreenState();
+  State<CategorySettingsScreen> createState() => _CategorySettingsScreenState();
 }
 
 class _CategorySettingsScreenState extends State<CategorySettingsScreen> {
@@ -103,8 +120,7 @@ class _CategorySettingsScreenState extends State<CategorySettingsScreen> {
                     dropdownColor: AppTheme.surfaceVariant,
                     decoration: const InputDecoration(labelText: 'Type'),
                     items: const [
-                      DropdownMenuItem(
-                          value: 'income', child: Text('Income')),
+                      DropdownMenuItem(value: 'income', child: Text('Income')),
                       DropdownMenuItem(
                           value: 'expense', child: Text('Expense')),
                       DropdownMenuItem(
@@ -120,8 +136,7 @@ class _CategorySettingsScreenState extends State<CategorySettingsScreen> {
                     dropdownColor: AppTheme.surfaceVariant,
                     decoration: const InputDecoration(labelText: 'Group'),
                     items: kGroupOrder
-                        .map((g) => DropdownMenuItem(
-                            value: g, child: Text(g)))
+                        .map((g) => DropdownMenuItem(value: g, child: Text(g)))
                         .toList(),
                     onChanged: (v) {
                       if (v != null) setLocal(() => selectedGroup = v);
@@ -133,19 +148,16 @@ class _CategorySettingsScreenState extends State<CategorySettingsScreen> {
                           color: AppTheme.onSurfaceMuted, fontSize: 13)),
                   const SizedBox(height: 10),
                   _ColorPickerGrid(
-                    selected:
-                        selectedColor != null && selectedColor!.isNotEmpty
-                            ? _parseHex(selectedColor!)
-                            : null,
+                    selected: selectedColor != null && selectedColor!.isNotEmpty
+                        ? _parseHex(selectedColor!)
+                        : null,
                     onSelect: (c) => setLocal(() => selectedColor =
                         '#${c.toARGB32().toRadixString(16).substring(2)}'),
                   ),
-                  if (selectedColor != null &&
-                      selectedColor!.isNotEmpty) ...[
+                  if (selectedColor != null && selectedColor!.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     TextButton.icon(
-                      onPressed: () =>
-                          setLocal(() => selectedColor = ''),
+                      onPressed: () => setLocal(() => selectedColor = ''),
                       icon: const Icon(Icons.refresh_rounded, size: 16),
                       label: const Text('Reset colour'),
                       style: TextButton.styleFrom(
@@ -237,8 +249,7 @@ class _CategorySettingsScreenState extends State<CategorySettingsScreen> {
                   children: [
                     TextFormField(
                       controller: nameController,
-                      decoration:
-                          const InputDecoration(labelText: 'Name'),
+                      decoration: const InputDecoration(labelText: 'Name'),
                       autofocus: true,
                       validator: (v) {
                         if ((v?.trim() ?? '').isEmpty) {
@@ -251,16 +262,14 @@ class _CategorySettingsScreenState extends State<CategorySettingsScreen> {
                     DropdownButtonFormField<String>(
                       value: selectedType,
                       dropdownColor: AppTheme.surfaceVariant,
-                      decoration:
-                          const InputDecoration(labelText: 'Type'),
+                      decoration: const InputDecoration(labelText: 'Type'),
                       items: const [
                         DropdownMenuItem(
                             value: 'income', child: Text('Income')),
                         DropdownMenuItem(
                             value: 'expense', child: Text('Expense')),
                         DropdownMenuItem(
-                            value: 'transfer',
-                            child: Text('Transfer')),
+                            value: 'transfer', child: Text('Transfer')),
                       ],
                       onChanged: (v) {
                         if (v != null) setLocal(() => selectedType = v);
@@ -270,11 +279,10 @@ class _CategorySettingsScreenState extends State<CategorySettingsScreen> {
                     DropdownButtonFormField<String>(
                       value: selectedGroup,
                       dropdownColor: AppTheme.surfaceVariant,
-                      decoration:
-                          const InputDecoration(labelText: 'Group'),
+                      decoration: const InputDecoration(labelText: 'Group'),
                       items: kGroupOrder
-                          .map((g) => DropdownMenuItem(
-                              value: g, child: Text(g)))
+                          .map(
+                              (g) => DropdownMenuItem(value: g, child: Text(g)))
                           .toList(),
                       onChanged: (v) {
                         if (v != null) setLocal(() => selectedGroup = v);
@@ -283,8 +291,7 @@ class _CategorySettingsScreenState extends State<CategorySettingsScreen> {
                     const SizedBox(height: 20),
                     const Text('Colour (optional)',
                         style: TextStyle(
-                            color: AppTheme.onSurfaceMuted,
-                            fontSize: 13)),
+                            color: AppTheme.onSurfaceMuted, fontSize: 13)),
                     const SizedBox(height: 10),
                     _ColorPickerGrid(
                       selected: selectedColor != null
@@ -296,8 +303,7 @@ class _CategorySettingsScreenState extends State<CategorySettingsScreen> {
                     const SizedBox(height: 20),
                     const Text('Keywords (one per line, optional)',
                         style: TextStyle(
-                            color: AppTheme.onSurfaceMuted,
-                            fontSize: 13)),
+                            color: AppTheme.onSurfaceMuted, fontSize: 13)),
                     const SizedBox(height: 8),
                     TextField(
                       controller: keywordsController,
@@ -368,8 +374,7 @@ class _CategorySettingsScreenState extends State<CategorySettingsScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.expense),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.expense),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete'),
           ),
@@ -530,9 +535,7 @@ class _GroupSection extends StatelessWidget {
                 backgroundColor: color,
                 radius: 16,
                 child: Text(
-                  cat.name.isNotEmpty
-                      ? cat.name[0].toUpperCase()
-                      : '?',
+                  cat.name.isNotEmpty ? cat.name[0].toUpperCase() : '?',
                   style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -597,8 +600,8 @@ class _ColorPickerGrid extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: _presetColors.map((color) {
-        final isSelected = selected != null &&
-            selected!.toARGB32() == color.toARGB32();
+        final isSelected =
+            selected != null && selected!.toARGB32() == color.toARGB32();
         return GestureDetector(
           onTap: () => onSelect(color),
           child: Container(

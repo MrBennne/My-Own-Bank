@@ -73,9 +73,8 @@ class _MonthlyBarChartState extends State<MonthlyBarChart> {
                           '${isIncome ? "Income" : "Expense"}\n'
                           '${formatter.format(value)} DKK',
                           TextStyle(
-                            color: isIncome
-                                ? AppTheme.income
-                                : AppTheme.expense,
+                            color:
+                                isIncome ? AppTheme.income : AppTheme.expense,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
@@ -181,8 +180,7 @@ class _MonthlyBarChartState extends State<MonthlyBarChart> {
                           ),
                         ),
                       ],
-                      showingTooltipIndicators:
-                          isTouched ? [0, 1] : [],
+                      showingTooltipIndicators: isTouched ? [0, 1] : [],
                     );
                   }),
                 ),
@@ -211,8 +209,8 @@ class _MonthlyBarChartState extends State<MonthlyBarChart> {
         ),
         const SizedBox(width: 4),
         Text(label,
-            style: const TextStyle(
-                color: AppTheme.onSurfaceMuted, fontSize: 11)),
+            style:
+                const TextStyle(color: AppTheme.onSurfaceMuted, fontSize: 11)),
       ],
     );
   }
@@ -228,8 +226,8 @@ class _MonthlyBarChartState extends State<MonthlyBarChart> {
         ),
         const SizedBox(width: 4),
         Text(label,
-            style: const TextStyle(
-                color: AppTheme.onSurfaceMuted, fontSize: 11)),
+            style:
+                const TextStyle(color: AppTheme.onSurfaceMuted, fontSize: 11)),
       ],
     );
   }
@@ -279,9 +277,7 @@ class _NetLineChart extends StatelessWidget {
                 show: true,
                 getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
                   radius: 3,
-                  color: spot.y >= 0
-                      ? AppTheme.savings
-                      : AppTheme.expense,
+                  color: spot.y >= 0 ? AppTheme.savings : AppTheme.expense,
                   strokeWidth: 0,
                 ),
               ),
@@ -302,14 +298,10 @@ class _NetLineChart extends StatelessWidget {
           gridData: const FlGridData(show: false),
           borderData: FlBorderData(show: false),
           titlesData: const FlTitlesData(
-            leftTitles: AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
-            rightTitles: AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
-            topTitles: AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           lineTouchData: LineTouchData(
             touchTooltipData: LineTouchTooltipData(

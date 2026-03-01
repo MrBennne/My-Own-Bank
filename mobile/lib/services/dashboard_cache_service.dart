@@ -39,8 +39,7 @@ class DashboardCacheService {
     if (json == null) return null;
 
     try {
-      return DashboardData.fromJson(
-          jsonDecode(json) as Map<String, dynamic>);
+      return DashboardData.fromJson(jsonDecode(json) as Map<String, dynamic>);
     } catch (_) {
       return null;
     }
@@ -62,8 +61,8 @@ class DashboardCacheService {
     if (!_ready) return;
     final prefs = _prefs!;
     final keys = prefs.getKeys().where(
-      (k) => k.startsWith(_dataPrefix) || k.startsWith(_tsPrefix),
-    );
+          (k) => k.startsWith(_dataPrefix) || k.startsWith(_tsPrefix),
+        );
     await Future.wait(keys.map((k) => prefs.remove(k)));
   }
 }

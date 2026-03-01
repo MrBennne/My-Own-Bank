@@ -141,17 +141,14 @@ class _CategoryChartState extends State<CategoryChart> {
             final pct = total > 0 ? cat.amount / total * 100 : 0.0;
             final isHl = i == _touchedIndex;
             return GestureDetector(
-              onTap: () => setState(() =>
-                  _touchedIndex = isHl ? -1 : i),
+              onTap: () => setState(() => _touchedIndex = isHl ? -1 : i),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: isHl ? color.withAlpha(26) : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color:
-                        isHl ? color.withAlpha(80) : Colors.transparent,
+                    color: isHl ? color.withAlpha(80) : Colors.transparent,
                   ),
                 ),
                 child: Row(
@@ -161,8 +158,7 @@ class _CategoryChartState extends State<CategoryChart> {
                       width: 10,
                       height: 10,
                       decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(2)),
+                          color: color, borderRadius: BorderRadius.circular(2)),
                     ),
                     const SizedBox(width: 5),
                     Text(cat.category,
@@ -182,8 +178,7 @@ class _CategoryChartState extends State<CategoryChart> {
           Text(
             '${cats[_touchedIndex].category}: ${fmt.format(cats[_touchedIndex].amount)} DKK',
             style: TextStyle(
-              color: CategoryColors.forCategory(
-                  cats[_touchedIndex].category),
+              color: CategoryColors.forCategory(cats[_touchedIndex].category),
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -206,8 +201,7 @@ class _CategoryChartState extends State<CategoryChart> {
         final isHl = i == _touchedIndex;
 
         return GestureDetector(
-          onTap: () =>
-              setState(() => _touchedIndex = isHl ? -1 : i),
+          onTap: () => setState(() => _touchedIndex = isHl ? -1 : i),
           child: Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: Column(
@@ -228,13 +222,10 @@ class _CategoryChartState extends State<CategoryChart> {
                       child: Text(
                         cat.category,
                         style: TextStyle(
-                          color: isHl
-                              ? color
-                              : AppTheme.onSurface,
+                          color: isHl ? color : AppTheme.onSurface,
                           fontSize: 13,
-                          fontWeight: isHl
-                              ? FontWeight.w600
-                              : FontWeight.normal,
+                          fontWeight:
+                              isHl ? FontWeight.w600 : FontWeight.normal,
                         ),
                       ),
                     ),
@@ -243,8 +234,7 @@ class _CategoryChartState extends State<CategoryChart> {
                       style: TextStyle(
                         color: AppTheme.onSurface,
                         fontSize: 12,
-                        fontWeight:
-                            isHl ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: isHl ? FontWeight.w600 : FontWeight.normal,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -324,8 +314,8 @@ class _CategoryChartState extends State<CategoryChart> {
               Expanded(
                 child: Text(
                   cat.category,
-                  style: const TextStyle(
-                      color: AppTheme.onSurface, fontSize: 13),
+                  style:
+                      const TextStyle(color: AppTheme.onSurface, fontSize: 13),
                 ),
               ),
               Text(
@@ -363,8 +353,7 @@ class _ChartTypeSelector extends StatelessWidget {
   final ChartType selected;
   final ValueChanged<ChartType> onChanged;
 
-  const _ChartTypeSelector(
-      {required this.selected, required this.onChanged});
+  const _ChartTypeSelector({required this.selected, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -381,8 +370,7 @@ class _ChartTypeSelector extends StatelessWidget {
           return GestureDetector(
             onTap: () => onChanged(t),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
               decoration: BoxDecoration(
                 color: isSelected ? AppTheme.primary : Colors.transparent,
                 borderRadius: BorderRadius.circular(7),
@@ -390,9 +378,7 @@ class _ChartTypeSelector extends StatelessWidget {
               child: Icon(
                 t.icon,
                 size: 15,
-                color: isSelected
-                    ? Colors.white
-                    : AppTheme.onSurfaceMuted,
+                color: isSelected ? Colors.white : AppTheme.onSurfaceMuted,
               ),
             ),
           );

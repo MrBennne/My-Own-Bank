@@ -49,8 +49,8 @@ class _CategoryPieChartState extends State<CategoryPieChart> {
                           _touchedIndex = -1;
                           return;
                         }
-                        _touchedIndex = response!
-                            .touchedSection!.touchedSectionIndex;
+                        _touchedIndex =
+                            response!.touchedSection!.touchedSectionIndex;
                       });
                     },
                   ),
@@ -65,9 +65,7 @@ class _CategoryPieChartState extends State<CategoryPieChart> {
                       color: color,
                       radius: isTouched ? 64 : 54,
                       showTitle: isTouched,
-                      title: isTouched
-                          ? '${pct.toStringAsFixed(1)}%'
-                          : '',
+                      title: isTouched ? '${pct.toStringAsFixed(1)}%' : '',
                       titleStyle: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,

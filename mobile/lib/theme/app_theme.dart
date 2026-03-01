@@ -86,7 +86,8 @@ class AppTheme {
         ),
         labelStyle: const TextStyle(color: onSurfaceMuted),
         hintStyle: const TextStyle(color: onSurfaceMuted),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

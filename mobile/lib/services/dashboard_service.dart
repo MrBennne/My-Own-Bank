@@ -87,20 +87,20 @@ class KpiData {
   });
 
   Map<String, dynamic> toJson() => {
-    'totalIncome': totalIncome,
-    'totalExpenses': totalExpenses,
-    'netSavings': netSavings,
-    'savingsRate': savingsRate,
-    'transactionCount': transactionCount,
-  };
+        'totalIncome': totalIncome,
+        'totalExpenses': totalExpenses,
+        'netSavings': netSavings,
+        'savingsRate': savingsRate,
+        'transactionCount': transactionCount,
+      };
 
   factory KpiData.fromJson(Map<String, dynamic> json) => KpiData(
-    totalIncome: (json['totalIncome'] as num).toDouble(),
-    totalExpenses: (json['totalExpenses'] as num).toDouble(),
-    netSavings: (json['netSavings'] as num).toDouble(),
-    savingsRate: (json['savingsRate'] as num).toDouble(),
-    transactionCount: (json['transactionCount'] as num).toInt(),
-  );
+        totalIncome: (json['totalIncome'] as num).toDouble(),
+        totalExpenses: (json['totalExpenses'] as num).toDouble(),
+        netSavings: (json['netSavings'] as num).toDouble(),
+        savingsRate: (json['savingsRate'] as num).toDouble(),
+        transactionCount: (json['transactionCount'] as num).toInt(),
+      );
 }
 
 class CategoryAmount {
@@ -112,9 +112,9 @@ class CategoryAmount {
   Map<String, dynamic> toJson() => {'category': category, 'amount': amount};
 
   factory CategoryAmount.fromJson(Map<String, dynamic> json) => CategoryAmount(
-    category: json['category'] as String,
-    amount: (json['amount'] as num).toDouble(),
-  );
+        category: json['category'] as String,
+        amount: (json['amount'] as num).toDouble(),
+      );
 }
 
 class MonthlyBar {
@@ -129,13 +129,14 @@ class MonthlyBar {
     required this.expenses,
   });
 
-  Map<String, dynamic> toJson() => {'label': label, 'income': income, 'expenses': expenses};
+  Map<String, dynamic> toJson() =>
+      {'label': label, 'income': income, 'expenses': expenses};
 
   factory MonthlyBar.fromJson(Map<String, dynamic> json) => MonthlyBar(
-    label: json['label'] as String,
-    income: (json['income'] as num).toDouble(),
-    expenses: (json['expenses'] as num).toDouble(),
-  );
+        label: json['label'] as String,
+        income: (json['income'] as num).toDouble(),
+        expenses: (json['expenses'] as num).toDouble(),
+      );
 }
 
 class DashboardData {
@@ -150,20 +151,20 @@ class DashboardData {
   });
 
   Map<String, dynamic> toJson() => {
-    'kpi': kpi.toJson(),
-    'topCategories': topCategories.map((c) => c.toJson()).toList(),
-    'monthlyBars': monthlyBars.map((b) => b.toJson()).toList(),
-  };
+        'kpi': kpi.toJson(),
+        'topCategories': topCategories.map((c) => c.toJson()).toList(),
+        'monthlyBars': monthlyBars.map((b) => b.toJson()).toList(),
+      };
 
   factory DashboardData.fromJson(Map<String, dynamic> json) => DashboardData(
-    kpi: KpiData.fromJson(json['kpi'] as Map<String, dynamic>),
-    topCategories: (json['topCategories'] as List)
-        .map((e) => CategoryAmount.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    monthlyBars: (json['monthlyBars'] as List)
-        .map((e) => MonthlyBar.fromJson(e as Map<String, dynamic>))
-        .toList(),
-  );
+        kpi: KpiData.fromJson(json['kpi'] as Map<String, dynamic>),
+        topCategories: (json['topCategories'] as List)
+            .map((e) => CategoryAmount.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        monthlyBars: (json['monthlyBars'] as List)
+            .map((e) => MonthlyBar.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
 }
 
 // ---------------------------------------------------------------------------
@@ -173,7 +174,7 @@ class DashboardData {
 class DateFilter {
   final TimePeriod? preset;
   final DateTime? customFrom; // first day of the start month
-  final DateTime? customTo;   // first day of the end month
+  final DateTime? customTo; // first day of the end month
 
   const DateFilter.fromPreset(TimePeriod p)
       : preset = p,
@@ -188,8 +189,18 @@ class DateFilter {
   bool get isCustom => preset == null;
 
   static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   String get label {
@@ -239,8 +250,7 @@ class DashboardService {
         totalIncome += absAmount;
       } else {
         totalExpenses += absAmount;
-        categoryMap[t.category] =
-            (categoryMap[t.category] ?? 0) + absAmount;
+        categoryMap[t.category] = (categoryMap[t.category] ?? 0) + absAmount;
       }
 
       // Monthly grouping
@@ -300,8 +310,18 @@ class DashboardService {
       final year = int.parse(parts[0]);
       final month = int.parse(parts[1]);
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       final shortYear = year.toString().substring(2);
       return '${months[month - 1]} $shortYear';

@@ -26,8 +26,9 @@ class PeriodSelector extends StatelessWidget {
     }
 
     // Default selection: current month for both from/to (or restore custom).
-    DateTime fromVal =
-        selected.isCustom ? selected.customFrom! : DateTime(now.year, now.month);
+    DateTime fromVal = selected.isCustom
+        ? selected.customFrom!
+        : DateTime(now.year, now.month);
     DateTime toVal =
         selected.isCustom ? selected.customTo! : DateTime(now.year, now.month);
 
@@ -87,8 +88,7 @@ class PeriodSelector extends StatelessWidget {
                 _MonthRowPicker(
                   label: 'To',
                   value: toVal,
-                  options:
-                      options.where((d) => !d.isBefore(fromVal)).toList(),
+                  options: options.where((d) => !d.isBefore(fromVal)).toList(),
                   onChanged: (d) => setLocal(() => toVal = d),
                 ),
 
@@ -124,22 +124,19 @@ class PeriodSelector extends StatelessWidget {
         children: [
           // Preset chips
           ...TimePeriod.values.map((period) {
-            final isSelected =
-                !selected.isCustom && selected.preset == period;
+            final isSelected = !selected.isCustom && selected.preset == period;
             return Padding(
               padding: const EdgeInsets.only(right: 6),
               child: ChoiceChip(
                 label: Text(period.label),
                 selected: isSelected,
-                onSelected: (_) =>
-                    onChanged(DateFilter.fromPreset(period)),
+                onSelected: (_) => onChanged(DateFilter.fromPreset(period)),
                 selectedColor: AppTheme.primary,
                 backgroundColor: AppTheme.surfaceVariant,
                 labelStyle: TextStyle(
                   color: isSelected ? Colors.white : AppTheme.onSurface,
                   fontSize: 12,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
                 side: BorderSide(
                   color: isSelected ? AppTheme.primary : AppTheme.divider,
@@ -147,8 +144,8 @@ class PeriodSelector extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             );
@@ -169,20 +166,16 @@ class PeriodSelector extends StatelessWidget {
               labelStyle: TextStyle(
                 color: selected.isCustom ? Colors.white : AppTheme.onSurface,
                 fontSize: 12,
-                fontWeight: selected.isCustom
-                    ? FontWeight.w600
-                    : FontWeight.normal,
+                fontWeight:
+                    selected.isCustom ? FontWeight.w600 : FontWeight.normal,
               ),
               side: BorderSide(
-                color: selected.isCustom
-                    ? AppTheme.savings
-                    : AppTheme.divider,
+                color: selected.isCustom ? AppTheme.savings : AppTheme.divider,
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
@@ -210,8 +203,18 @@ class _MonthRowPicker extends StatelessWidget {
   final ValueChanged<DateTime> onChanged;
 
   static const _monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   @override
@@ -234,20 +237,17 @@ class _MonthRowPicker extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: AppTheme.divider),
           ),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Month dropdown
               DropdownButtonHideUnderline(
                 child: DropdownButton<DateTime>(
-                  value: options.contains(value)
-                      ? value
-                      : options.firstOrNull,
+                  value: options.contains(value) ? value : options.firstOrNull,
                   dropdownColor: AppTheme.surfaceVariant,
-                  style: const TextStyle(
-                      color: AppTheme.onSurface, fontSize: 15),
+                  style:
+                      const TextStyle(color: AppTheme.onSurface, fontSize: 15),
                   items: options
                       .where((d) => d.year == value.year)
                       .map((d) => DropdownMenuItem(
@@ -271,12 +271,9 @@ class _MonthRowPicker extends StatelessWidget {
                 child: DropdownButton<int>(
                   value: value.year,
                   dropdownColor: AppTheme.surfaceVariant,
-                  style: const TextStyle(
-                      color: AppTheme.onSurface, fontSize: 15),
-                  items: (options
-                          .map((d) => d.year)
-                          .toSet()
-                          .toList()
+                  style:
+                      const TextStyle(color: AppTheme.onSurface, fontSize: 15),
+                  items: (options.map((d) => d.year).toSet().toList()
                         ..sort((a, b) => b.compareTo(a)))
                       .map((y) => DropdownMenuItem(
                             value: y,
@@ -287,9 +284,8 @@ class _MonthRowPicker extends StatelessWidget {
                     if (y == null) return;
                     // Keep same month if available in new year, else clamp.
                     final sameMonth = DateTime(y, value.month);
-                    final available = options
-                        .where((d) => d.year == y)
-                        .toList();
+                    final available =
+                        options.where((d) => d.year == y).toList();
                     if (available.contains(sameMonth)) {
                       onChanged(sameMonth);
                     } else {

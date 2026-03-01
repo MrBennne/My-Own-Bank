@@ -169,8 +169,7 @@ class _ImportScreenState extends State<ImportScreen> {
                   decoration: BoxDecoration(
                     color: AppTheme.primary.withAlpha(13),
                     borderRadius: BorderRadius.circular(12),
-                    border:
-                        Border.all(color: AppTheme.primary.withAlpha(51)),
+                    border: Border.all(color: AppTheme.primary.withAlpha(51)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,18 +233,15 @@ class _ImportScreenState extends State<ImportScreen> {
                                 dropdownColor: AppTheme.surfaceVariant,
                                 isExpanded: true,
                                 style: const TextStyle(
-                                    color: AppTheme.onSurface,
-                                    fontSize: 15),
+                                    color: AppTheme.onSurface, fontSize: 15),
                                 items: [
-                                  ...accounts.map((a) =>
-                                      DropdownMenuItem(
-                                          value: a, child: Text(a))),
+                                  ...accounts.map((a) => DropdownMenuItem(
+                                      value: a, child: Text(a))),
                                   const DropdownMenuItem(
                                     value: '__new__',
                                     child: Row(children: [
                                       Icon(Icons.add_rounded,
-                                          size: 16,
-                                          color: AppTheme.primary),
+                                          size: 16, color: AppTheme.primary),
                                       SizedBox(width: 6),
                                       Text('New account…',
                                           style: TextStyle(
@@ -257,8 +253,7 @@ class _ImportScreenState extends State<ImportScreen> {
                                   if (v == '__new__') {
                                     _showNewAccountDialog();
                                   } else if (v != null) {
-                                    setState(
-                                        () => _selectedAccount = v);
+                                    setState(() => _selectedAccount = v);
                                   }
                                 },
                               ),
@@ -293,8 +288,8 @@ class _ImportScreenState extends State<ImportScreen> {
                       children: [
                         Checkbox(
                           value: _skipCategorization,
-                          onChanged: (v) => setState(
-                              () => _skipCategorization = v ?? false),
+                          onChanged: (v) =>
+                              setState(() => _skipCategorization = v ?? false),
                           activeColor: AppTheme.amber,
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
@@ -398,8 +393,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.primary,
                         side: const BorderSide(color: AppTheme.primary),
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
                   ),
@@ -413,13 +407,11 @@ class _ImportScreenState extends State<ImportScreen> {
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white))
+                                  strokeWidth: 2, color: Colors.white))
                           : const Icon(Icons.cloud_upload_rounded),
                       label: Text(_running ? 'Importing…' : 'Import'),
                       style: ElevatedButton.styleFrom(
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 14)),
+                          padding: const EdgeInsets.symmetric(vertical: 14)),
                     ),
                   ),
                 ]),
@@ -455,9 +447,7 @@ class _ImportScreenState extends State<ImportScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            _resultSuccess
-                                ? 'Import Complete'
-                                : 'Import Error',
+                            _resultSuccess ? 'Import Complete' : 'Import Error',
                             style: TextStyle(
                               color: _resultSuccess
                                   ? AppTheme.income

@@ -34,13 +34,9 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "pocketbase"
+    "pocketbase",
+    "context7"
   ],
-  "enabledPlugins": {
-    "ultrathink@cc-marketplace": true,
-    "serena@claude-plugins-official": true
-  },
-  "outputStyle": "Explanatory",
   "hooks": {
     "PostToolUse": [
       {
@@ -54,5 +50,10 @@
         ]
       }
     ]
-  }
+  },
+  "enabledPlugins": {
+    "ultrathink@cc-marketplace": true,
+    "serena@claude-plugins-official": true
+  },
+  "outputStyle": "Explanatory"
 }

@@ -30,16 +30,14 @@ class SettingsScreen extends StatelessWidget {
                 title: const Text('Categories'),
                 subtitle: Text(
                   '$catCount categories',
-                  style:
-                      const TextStyle(color: AppTheme.onSurfaceMuted),
+                  style: const TextStyle(color: AppTheme.onSurfaceMuted),
                 ),
                 trailing: const Icon(Icons.chevron_right_rounded,
                     color: AppTheme.onSurfaceMuted),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (_) =>
-                          const CategorySettingsScreen()),
+                      builder: (_) => const CategorySettingsScreen()),
                 ),
               ),
 
@@ -61,8 +59,7 @@ class SettingsScreen extends StatelessWidget {
                     color: AppTheme.onSurfaceMuted),
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (_) => const RulesEditorScreen()),
+                  MaterialPageRoute(builder: (_) => const RulesEditorScreen()),
                 ),
               ),
 
@@ -76,8 +73,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 title: const Text('Version'),
                 subtitle: const Text('1.1.0',
-                    style:
-                        TextStyle(color: AppTheme.onSurfaceMuted)),
+                    style: TextStyle(color: AppTheme.onSurfaceMuted)),
               ),
             ],
           );

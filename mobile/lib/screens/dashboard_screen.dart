@@ -22,8 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _api = ApiService();
   final _dashboardService = DashboardService();
 
-  DateFilter _filter =
-      const DateFilter.fromPreset(TimePeriod.thisMonth);
+  DateFilter _filter = const DateFilter.fromPreset(TimePeriod.thisMonth);
   bool _loading = false;
   String? _error;
   List<Transaction> _transactions = [];
@@ -42,8 +41,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     try {
-      final filterKey = DashboardCacheService.sanitiseKey(
-          _filter.dateFilter ?? 'all');
+      final filterKey =
+          DashboardCacheService.sanitiseKey(_filter.dateFilter ?? 'all');
       final cache = DashboardCacheService.instance;
 
       // Try cache first (unless force refresh)
@@ -124,8 +123,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('Loading…',
-                style: TextStyle(color: AppTheme.onSurfaceMuted)),
+            Text('Loading…', style: TextStyle(color: AppTheme.onSurfaceMuted)),
           ],
         ),
       );
@@ -337,9 +335,7 @@ class _TopExpenses extends StatelessWidget {
   Widget build(BuildContext context) {
     final fmt = NumberFormat('#,##0', 'da_DK');
 
-    final expenses = transactions
-        .where((t) => !t.isIncome)
-        .toList()
+    final expenses = transactions.where((t) => !t.isIncome).toList()
       ..sort((a, b) => a.amount.compareTo(b.amount)); // most negative first
 
     final top5 = expenses.take(5).toList();
@@ -365,8 +361,7 @@ class _TopExpenses extends StatelessWidget {
               children: top5.asMap().entries.map((e) {
                 final i = e.key;
                 final tx = e.value;
-                final color =
-                    CategoryColors.forCategory(tx.category);
+                final color = CategoryColors.forCategory(tx.category);
                 final isLast = i == top5.length - 1;
                 return Column(
                   children: [
@@ -396,8 +391,7 @@ class _TopExpenses extends StatelessWidget {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   tx.name,
@@ -431,7 +425,8 @@ class _TopExpenses extends StatelessWidget {
                       ),
                     ),
                     if (!isLast)
-                      const Divider(height: 1, indent: 56, color: AppTheme.divider),
+                      const Divider(
+                          height: 1, indent: 56, color: AppTheme.divider),
                   ],
                 );
               }).toList(),

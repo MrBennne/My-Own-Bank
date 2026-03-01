@@ -29,7 +29,8 @@ class AuthService {
         .timeout(const Duration(seconds: 15));
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       final token = data['token'] as String;
       await _storage.write(key: _kTokenKey, value: token);
       return token;
@@ -54,12 +55,10 @@ class AuthService {
       final uri = Uri.parse(
         '$_kBaseUrl/api/collections/transactions/records?perPage=1',
       );
-      final response = await http
-          .get(
-            uri,
-            headers: {'Authorization': token},
-          )
-          .timeout(const Duration(seconds: 10));
+      final response = await http.get(
+        uri,
+        headers: {'Authorization': token},
+      ).timeout(const Duration(seconds: 10));
       return response.statusCode == 200;
     } catch (_) {
       return false;

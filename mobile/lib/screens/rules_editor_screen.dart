@@ -26,8 +26,7 @@ class _RulesEditorScreenState extends State<RulesEditorScreen> {
   }
 
   Future<void> _editKeywords(Category cat) async {
-    final controller =
-        TextEditingController(text: cat.keywords.join('\n'));
+    final controller = TextEditingController(text: cat.keywords.join('\n'));
 
     final saved = await showDialog<List<String>>(
       context: context,
@@ -52,8 +51,8 @@ class _RulesEditorScreenState extends State<RulesEditorScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Keywords (one per line)',
-                  style: TextStyle(
-                      color: AppTheme.onSurfaceMuted, fontSize: 12)),
+                  style:
+                      TextStyle(color: AppTheme.onSurfaceMuted, fontSize: 12)),
               const SizedBox(height: 8),
               TextField(
                 controller: controller,
@@ -103,8 +102,7 @@ class _RulesEditorScreenState extends State<RulesEditorScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Error: $e'),
-                backgroundColor: AppTheme.expense),
+                content: Text('Error: $e'), backgroundColor: AppTheme.expense),
           );
         }
       }
@@ -164,11 +162,9 @@ class _GroupSection extends StatelessWidget {
     return ExpansionTile(
       initiallyExpanded: true,
       title: Text(group.groupName,
-          style: const TextStyle(
-              fontWeight: FontWeight.w700, fontSize: 14)),
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
       trailing: Text('$totalKw keywords',
-          style: const TextStyle(
-              color: AppTheme.onSurfaceMuted, fontSize: 12)),
+          style: const TextStyle(color: AppTheme.onSurfaceMuted, fontSize: 12)),
       children: group.categories.map((cat) {
         final kwCount = cat.keywords.length;
         return ListTile(
@@ -177,8 +173,8 @@ class _GroupSection extends StatelessWidget {
           title: Text(cat.name),
           subtitle: Text(
             '$kwCount keyword${kwCount == 1 ? '' : 's'}',
-            style: const TextStyle(
-                color: AppTheme.onSurfaceMuted, fontSize: 12),
+            style:
+                const TextStyle(color: AppTheme.onSurfaceMuted, fontSize: 12),
           ),
           trailing: const Icon(Icons.chevron_right_rounded,
               color: AppTheme.onSurfaceMuted, size: 18),

@@ -176,12 +176,12 @@ class CategoryService extends ChangeNotifier {
 
     // Build parent lookup and collect all keywords with their categories
     final catMap = {for (final c in _categories) c.id: c};
-    final allMatches = <(String keyword, Category category, String effectiveType)>[];
+    final allMatches =
+        <(String keyword, Category category, String effectiveType)>[];
 
     for (final cat in _categories) {
-      final effectiveType = cat.isSubcategory
-          ? catMap[cat.parentId]?.type ?? cat.type
-          : cat.type;
+      final effectiveType =
+          cat.isSubcategory ? catMap[cat.parentId]?.type ?? cat.type : cat.type;
       for (final kw in cat.keywords) {
         allMatches.add((kw, cat, effectiveType));
       }

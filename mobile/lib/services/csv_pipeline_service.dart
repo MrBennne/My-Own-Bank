@@ -118,8 +118,7 @@ class CsvPipelineService {
 
   Future<Set<String>> _existingKeys(
       List<Map<String, dynamic>> transactions) async {
-    final dates = transactions.map((t) => t['date'] as String).toList()
-      ..sort();
+    final dates = transactions.map((t) => t['date'] as String).toList()..sort();
     final minDate = dates.first;
     final maxDate = dates.last;
 
@@ -127,9 +126,8 @@ class CsvPipelineService {
     int page = 1, totalPages = 1;
 
     do {
-      final uri =
-          Uri.parse('$_kBaseUrl/api/collections/transactions/records')
-              .replace(queryParameters: {
+      final uri = Uri.parse('$_kBaseUrl/api/collections/transactions/records')
+          .replace(queryParameters: {
         'perPage': '500',
         'page': '$page',
         'fields': 'date,name,amount',
@@ -139,7 +137,8 @@ class CsvPipelineService {
           .get(uri, headers: await _authHeaders())
           .timeout(const Duration(seconds: 20));
       if (resp.statusCode != 200) break;
-      final data = jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+      final data =
+          jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
       for (final rec in data['items'] as List) {
         keys.add('${rec['date']}|${rec['name']}|${rec['amount']}');
       }
@@ -173,7 +172,8 @@ class CsvPipelineService {
     if (resp.statusCode != 200 && resp.statusCode != 201) {
       throw Exception('HTTP ${resp.statusCode}');
     }
-    final body = jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+    final body =
+        jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
     return body['id'] as String?;
   }
 
@@ -206,9 +206,8 @@ class CsvPipelineService {
         .timeout(const Duration(seconds: 20));
     if (otherResp.statusCode != 200) return 0;
 
-    final otherItems =
-        (jsonDecode(otherResp.body)['items'] as List? ?? [])
-            .cast<Map<String, dynamic>>();
+    final otherItems = (jsonDecode(otherResp.body)['items'] as List? ?? [])
+        .cast<Map<String, dynamic>>();
 
     int linked = 0;
 
@@ -297,22 +296,20 @@ class CsvPipelineService {
       }
     } else {
       for (final tx in txs) {
-        final result = catService.categorize(
-            tx['name'] as String, tx['type'] as String);
+        final result =
+            catService.categorize(tx['name'] as String, tx['type'] as String);
         tx['category'] = result.category;
         tx['subcategory'] = result.subcategory;
         tx['type'] = result.type; // May change to 'Transfer'
       }
     }
-    final catCount =
-        txs.where((t) => t['category'] != 'Uncategorized').length;
+    final catCount = txs.where((t) => t['category'] != 'Uncategorized').length;
     final uncatCount = txs.length - catCount;
 
     // 3. Deduplicate
     final existing = await _existingKeys(txs);
     final newTxs = txs.where((tx) {
-      return !existing
-          .contains('${tx['date']}|${tx['name']}|${tx['amount']}');
+      return !existing.contains('${tx['date']}|${tx['name']}|${tx['amount']}');
     }).toList();
     final dupes = txs.length - newTxs.length;
 

@@ -60,8 +60,7 @@ class _ReviewRulesScreenState extends State<ReviewRulesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: AppTheme.expense),
+              content: Text('Error: $e'), backgroundColor: AppTheme.expense),
         );
       }
     }
@@ -92,8 +91,7 @@ class _ReviewRulesScreenState extends State<ReviewRulesScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Failed: $e'),
-                backgroundColor: AppTheme.expense),
+                content: Text('Failed: $e'), backgroundColor: AppTheme.expense),
           );
         }
       }
@@ -106,8 +104,7 @@ class _ReviewRulesScreenState extends State<ReviewRulesScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceVariant,
         title: const Text('Dismiss all?'),
-        content: Text(
-            'Mark all ${_pending.length} pending items as reviewed. '
+        content: Text('Mark all ${_pending.length} pending items as reviewed. '
             'They will no longer appear here.'),
         actions: [
           TextButton(
@@ -292,8 +289,7 @@ class _ReviewTile extends StatelessWidget {
       }
     } catch (_) {}
 
-    final displayCat =
-        tx.subcategory.isNotEmpty ? tx.subcategory : tx.category;
+    final displayCat = tx.subcategory.isNotEmpty ? tx.subcategory : tx.category;
 
     return Dismissible(
       key: ValueKey(tx.id),
@@ -306,8 +302,7 @@ class _ReviewTile extends StatelessWidget {
       ),
       onDismissed: (_) => onDismiss(),
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -319,8 +314,7 @@ class _ReviewTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: catColor.withAlpha(80)),
               ),
-              child:
-                  Icon(Icons.label_rounded, color: catColor, size: 18),
+              child: Icon(Icons.label_rounded, color: catColor, size: 18),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -339,8 +333,7 @@ class _ReviewTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(dateStr,
                       style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.onSurfaceMuted)),
+                          fontSize: 12, color: AppTheme.onSurfaceMuted)),
                   const SizedBox(height: 6),
                   GestureDetector(
                     onTap: onRecategorize,
@@ -350,8 +343,7 @@ class _ReviewTile extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: catColor.withAlpha(30),
                         borderRadius: BorderRadius.circular(12),
-                        border:
-                            Border.all(color: catColor.withAlpha(80)),
+                        border: Border.all(color: catColor.withAlpha(80)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -362,8 +354,7 @@ class _ReviewTile extends StatelessWidget {
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600)),
                           const SizedBox(width: 4),
-                          Icon(Icons.edit_rounded,
-                              size: 10, color: catColor),
+                          Icon(Icons.edit_rounded, size: 10, color: catColor),
                         ],
                       ),
                     ),
@@ -386,13 +377,12 @@ class _ReviewTile extends StatelessWidget {
                 GestureDetector(
                   onTap: onDismiss,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppTheme.income.withAlpha(20),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: AppTheme.income.withAlpha(60)),
+                      border: Border.all(color: AppTheme.income.withAlpha(60)),
                     ),
                     child: const Text('Done',
                         style: TextStyle(

@@ -71,8 +71,7 @@ class SettingsService extends ChangeNotifier {
   String get txSearchQuery => _prefs.getString(_txSearchQueryKey) ?? '';
   String get txSelectedCategory =>
       _prefs.getString(_txSelectedCategoryKey) ?? '';
-  String get txSelectedType =>
-      _prefs.getString(_txSelectedTypeKey) ?? 'All';
+  String get txSelectedType => _prefs.getString(_txSelectedTypeKey) ?? 'All';
   String get txSortField => _prefs.getString(_txSortFieldKey) ?? 'date';
   bool get txSortAsc => _prefs.getBool(_txSortAscKey) ?? false;
 
